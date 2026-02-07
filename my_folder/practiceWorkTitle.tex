@@ -1,0 +1,48 @@
+%%% Титульник отчета по практической работе
+%%
+\pdfbookmark[-1]{\pdfTitle}{tit}
+%%
+\thispagestyle{empty}%
+\makeatletter
+\newgeometry{top=2cm,bottom=2cm,left=3cm,right=1cm,headsep=0cm,footskip=0cm}
+\savegeometry{NoFoot}%
+\makeatother
+
+{\centering%
+\small%
+{\bfseries
+	<<\SPbPU>>\\%
+\institute\\%
+\School\\%
+}
+\par}%
+
+\vspace{0pt plus3fill}
+
+{\centering%
+{\bfseries\large ПРАКТИЧЕСКАЯ РАБОТА № \practiceNumber}\\[1em]
+{\bfseries \practiceWorkTitle}\\[1em]
+по дисциплине: <<\practiceDiscipline>>
+	\par}%
+
+\vspace{0pt plus3fill}
+
+% Используем tabularx для разнесения по разным сторонам
+\noindent
+\begin{tabularx}{\linewidth}{lXr}
+	Выполнил & & \\
+	студент гр. \group & & \Author \\[2em]
+
+	Проверил & & \\
+	\HeadDegree & & \\
+	\HeadDep & & \Head
+\end{tabularx}
+
+\vspace{0pt plus2fill}
+
+{\centering%
+Санкт-Петербург~-- \thesisYear
+\par}%
+
+\restoregeometry
+\newpage

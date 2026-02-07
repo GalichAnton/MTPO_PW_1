@@ -1,0 +1,190 @@
+\chapter{Проектирование приложения} \label{ch:design}
+
+Данная глава посвящена проектированию приложения для топологической сортировки графов. В параграфе \ref{sec:usecase} представлена диаграмма вариантов использования системы. Параграф \ref{sec:menu} описывает интерфейс меню приложения. В параграфе \ref{sec:help} приведена справочная информация о программе. Параграф \ref{sec:structure} раскрывает структуру проекта.
+
+\section{Use-Case диаграмма} \label{sec:usecase}
+
+Диаграмма вариантов использования (Use-Case) отображает функциональные требования к системе с точки зрения пользователя.
+На \firef{fig:usecase} представлена диаграмма вариантов использования приложения топологической сортировки.
+
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        actor/.style={circle, draw, minimum size=1cm, font=\small},
+        usecase/.style={ellipse, draw, minimum width=3.2cm, minimum height=0.9cm, align=center, font=\footnotesize},
+        include/.style={ellipse, draw, dashed, minimum width=2.5cm, minimum height=0.7cm, align=center, font=\scriptsize},
+        arrow/.style={->, >=stealth},
+        inclarrow/.style={->, >=stealth, dashed}
+    ]
+
+% Актор
+        \node[actor] (user) at (0,-6.5) {User};
+
+% Use Cases - увеличены вертикальные интервалы
+        \node[usecase] (uc1) at (5.5,-1) {UC1: Показать справку};
+        \node[usecase] (uc2) at (5.5,-2.8) {UC2: Ввести граф вручную};
+        \node[usecase] (uc3) at (5.5,-4.6) {UC3: Загрузить граф из JSON};
+        \node[usecase] (uc4) at (5.5,-6.4) {UC4: Выбрать алгоритм};
+        \node[usecase] (uc5) at (5.5,-9) {UC5: Выполнить сортировку};
+        \node[usecase] (uc6) at (5.5,-11) {UC6: Вывод в консоль};
+        \node[usecase] (uc7) at (5.5,-12.5) {UC7: Сохранить в JSON};
+        \node[usecase] (uc8) at (5.5,-13.5) {UC8: Сравнить алгоритмы};
+
+% Include relationships - сдвинуты вправо
+        \node[include] (val) at (11,-2.8) {Валидация ввода};
+        \node[include] (parse) at (11,-4.6) {Парсинг файла};
+        \node[include] (cycle) at (11,-9) {Проверка на циклы};
+
+% Алгоритмы - размещены ниже UC4 с отступом
+        \node[include] (dfs) at (4,-7.7) {DFS-based};
+        \node[include] (kahn) at (7.5,-7.7) {Алгоритм Кана};
+
+% Связи актора с use case
+        \draw[arrow] (user) -- (uc1);
+        \draw[arrow] (user) -- (uc2);
+        \draw[arrow] (user) -- (uc3);
+        \draw[arrow] (user) -- (uc4);
+        \draw[arrow] (user) -- (uc5);
+        \draw[arrow] (user) -- (uc6);
+        \draw[arrow] (user) -- (uc7);
+        \draw[arrow] (user) -- (uc8);
+
+% Include связи
+        \draw[inclarrow] (uc2) -- (val) node[midway, above, font=\tiny] {<<include>>};
+        \draw[inclarrow] (uc3) -- (parse) node[midway, above, font=\tiny] {<<include>>};
+        \draw[inclarrow] (uc5) -- (cycle) node[midway, above, font=\tiny] {<<include>>};
+
+% Связи выбора алгоритма
+        \draw[inclarrow] (uc4) -- (dfs);
+        \draw[inclarrow] (uc4) -- (kahn);
+
+    \end{tikzpicture}
+    \caption{Диаграмма вариантов использования приложения}
+    \label{fig:usecase}
+\end{figure}
+
+
+Система поддерживает восемь основных вариантов использования:
+\begin{itemize}
+    \item \textbf{UC1} --- просмотр справочной информации о программе и алгоритмах;
+    \item \textbf{UC2} --- ручной ввод графа с валидацией входных данных;
+    \item \textbf{UC3} --- загрузка графа из JSON-файла с парсингом;
+    \item \textbf{UC4} --- выбор алгоритма сортировки (DFS или Кана);
+    \item \textbf{UC5} --- выполнение топологической сортировки с проверкой на циклы;
+    \item \textbf{UC6} --- вывод результатов в консоль;
+    \item \textbf{UC7} --- сохранение результатов в JSON-файл;
+\end{itemize}
+
+\section{Меню приложения} \label{sec:menu}
+
+Интерфейс приложения реализован в виде консольного меню. На \firef{fig:menu} представлен внешний вид главного меню программы.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tcolorbox}[
+        colback=black!5,
+        colframe=black!75,
+        width=0.85\textwidth,
+        arc=0mm,
+        boxrule=1pt,
+        fontupper=\ttfamily\small
+    ]
+        \begin{center}
+            \textbf{ТОПОЛОГИЧЕСКАЯ СОРТИРОВКА ГРАФА v1.0}
+        \end{center}
+        \tcblower
+        \begin{tabbing}
+            \hspace{1em}\=\kill
+            \>1. Справка о программе\\
+            \>2. Ввести граф вручную\\
+            \>3. Загрузить граф из JSON-файла\\
+            \>4. Показать текущий граф\\
+            \>5. Выполнить топологическую сортировку (DFS)\\
+            \>6. Выполнить топологическую сортировку (Кан)\\
+            \>7. Сравнить результаты обоих алгоритмов\\
+            \>8. Сохранить результат в JSON-файл\\
+            \>0. Выход
+        \end{tabbing}
+    \end{tcolorbox}
+    \caption{Главное меню приложения}
+    \label{fig:menu}
+\end{figure}
+
+Меню предоставляет пользователю полный набор функций для работы с графами: от ввода данных до сохранения результатов. Навигация осуществляется путём ввода номера соответствующего пункта меню.
+
+\section{Справочная информация} \label{sec:help}
+
+Справочная система приложения содержит теоретические сведения об алгоритмах и формате данных.
+Содержимое справки представлено на \firef{fig:help}.
+
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tcolorbox}[
+        colback=blue!5,
+        colframe=blue!50!black,
+        width=0.9\textwidth,
+        arc=0mm,
+        boxrule=1pt,
+        title={\centering\textbf{СПРАВКА}},
+        fontupper=\small
+    ]
+        \textbf{ОПИСАНИЕ:}
+        \begin{itemize}[nosep, leftmargin=1.5em]
+            \item Программа выполняет топологическую сортировку
+            \item ориентированного ациклического графа (DAG)
+            \item Результат — линейный порядок вершин, где для
+            \item каждого ребра u → v вершина u идёт перед v
+        \end{itemize}
+
+        \vspace{0.5em}
+        \textbf{АЛГОРИТМЫ:}
+        \begin{itemize}[nosep, leftmargin=1.5em]
+            \item DFS — на основе поиска в глубину
+            \item Kahn — на основе очереди с входящими степенями
+        \end{itemize}
+
+        \vspace{0.5em}
+        \textbf{ФОРМАТ JSON-ФАЙЛА:}
+        \begin{verbatim}
+            {
+                "vertices": ["A", "B", "C"],
+                "edges": [
+                    {"from": "A", "to": "B"},
+                    {"from": "B", "to": "C"}
+                ]
+            }
+        \end{verbatim}
+
+        \vspace{0.5em}
+        \textbf{РЕКОМЕНДАЦИИ:}
+        \begin{itemize}[nosep, leftmargin=1.5em]
+            \item Убедитесь, что граф не содержит циклов
+            \item Все вершины в рёбрах должны существовать
+            \item Для больших графов используйте загрузку из файла
+            \item Используйте сравнение алгоритмов для анализа
+        \end{itemize}
+    \end{tcolorbox}
+    \caption{Справочная информация приложения}
+    \label{fig:help}
+\end{figure}
+
+
+\section{Структура проекта} \label{sec:structure}
+
+Проект организован согласно стандартной структуре Maven-проекта с разделением на слои. Структура каталогов представлена на \firef{fig:structure}.
+
+Проект разделён на следующие пакеты:
+\begin{itemize}
+    \item \texttt{model} --- классы предметной области (граф, результаты);
+    \item \texttt{algorithm} --- реализации алгоритмов топологической сортировки;
+    \item \texttt{io} --- ввод-вывод данных (JSON, консоль);
+    \item \texttt{util} --- валидация данных;
+\end{itemize}
+
+Тестовый код организован зеркально основному коду, что обеспечивает удобство навигации и поддержки.
+
+\section{Выводы} \label{sec:design-conclusion}
+
+В данной главе выполнено проектирование приложения для топологической сортировки графов. Разработана диаграмма вариантов использования, определяющая восемь основных сценариев взаимодействия пользователя с системой. Спроектирован консольный интерфейс с интуитивно понятным меню. Определена модульная структура проекта, обеспечивающая разделение ответственности между компонентами и удобство тестирования.
