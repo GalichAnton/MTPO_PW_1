@@ -1,32 +1,111 @@
 \chapter{Разработка тестовой документации} \label{ch3}
 
-В данной главе представлена разработка тестовой документации для приложения топологической сортировки, реализующего алгоритмы DFS и Кана. Для каждого метода тестирования определены проверяемые условия (test cover items) и контрольные примеры (test cases). В завершение главы приведён сравнительный анализ использованных методов.
+В данной главе представлена разработка тестовой документации для приложения топологической сортировки, реализующего алгоритмы DFS и Кана. Сначала определены проверяемые условия (test cover items), затем для каждого метода тестирования разработаны контрольные примеры (test cases). В завершение главы приведён сравнительный анализ использованных методов с оценкой трудозатрат и рекомендациями по оптимизации тестового набора.
+
+\section{Проверяемые условия (Test Cover Items)} \label{ch3:items}
+
+Проверяемые условия определяют, какие аспекты системы подлежат тестированию. Они разделены на три категории: входные данные, выходные данные и внутренняя обработка.
+
+\subsection{Входные данные} \label{ch3:items:input}
+
+В таблице~\ref{tab:input_items} представлены проверяемые условия для входных данных приложения.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Проверяемые условия для входных данных}
+    \label{tab:input_items}
+    \begin{tabular}{|c|l|p{7cm}|}
+        \hline
+        \textbf{ID} & \textbf{Условие} & \textbf{Описание} \\
+        \hline
+        IN-01 & Пустой граф & vertices = [], edges = [] \\
+        \hline
+        IN-02 & Одна вершина без рёбер & vertices = [1], edges = [] \\
+        \hline
+        IN-03 & Линейный граф & A $\rightarrow$ B $\rightarrow$ C $\rightarrow$ D \\
+        \hline
+        IN-04 & Граф с несколькими корнями & Несколько вершин без входящих рёбер \\
+        \hline
+        IN-05 & Граф с циклом & Недопустимый ввод --- должна быть ошибка \\
+        \hline
+        IN-06 & Некорректный JSON & Невалидный формат файла \\
+        \hline
+        IN-07 & Несуществующий файл & Путь к файлу, которого нет \\
+        \hline
+        IN-08 & Большой граф & 1000+ вершин \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\subsection{Выходные данные} \label{ch3:items:output}
+
+В таблице~\ref{tab:output_items} представлены проверяемые условия для выходных данных.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Проверяемые условия для выходных данных}
+    \label{tab:output_items}
+    \begin{tabular}{|c|l|p{7cm}|}
+        \hline
+        \textbf{ID} & \textbf{Условие} & \textbf{Описание} \\
+        \hline
+        OUT-01 & Корректный порядок & Каждое ребро u$\rightarrow$v: u предшествует v в результате \\
+        \hline
+        OUT-02 & Все вершины присутствуют & Результат содержит все вершины графа \\
+        \hline
+        OUT-03 & Сообщение об ошибке при цикле & Информативное сообщение \\
+        \hline
+        OUT-04 & JSON-формат вывода & Валидный JSON в файле \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\subsection{Внутренняя обработка} \label{ch3:items:proc}
+
+В таблице~\ref{tab:proc_items} представлены проверяемые условия для внутренней обработки.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Проверяемые условия для внутренней обработки}
+    \label{tab:proc_items}
+    \begin{tabular}{|c|l|p{7cm}|}
+        \hline
+        \textbf{ID} & \textbf{Условие} & \textbf{Описание} \\
+        \hline
+        PROC-01 & DFS посещает все вершины & Все вершины обработаны \\
+        \hline
+        PROC-02 & Kahn корректно считает in-degree & Счётчик входящих рёбер \\
+        \hline
+        PROC-03 & Детектирование цикла в DFS & Состояния: WHITE/GRAY/BLACK \\
+        \hline
+        PROC-04 & Детектирование цикла в Kahn & Не все вершины в результате \\
+        \hline
+    \end{tabular}
+\end{table}
 
 \section{Equivalence Partitioning (Разбиение на классы эквивалентности)} \label{ch3:ep}
 
 Метод разбиения на классы эквивалентности основан на разделении входных данных на группы, для которых поведение системы должно быть одинаковым. Из каждого класса достаточно выбрать одного представителя для тестирования.
 
-\subsection{Проверяемые условия}
+\subsection{Классы эквивалентности}
 
-В таблице~\ref{tab:ep_items} представлены выделенные классы эквивалентности для входных данных приложения.
+В таблице~\ref{tab:ep_classes} представлены выделенные классы эквивалентности для входных данных приложения.
 
 \begin{table}[htbp]
     \centering
     \caption{Классы эквивалентности входных данных}
-    \label{tab:ep_items}
-    \begin{tabular}{|c|l|l|c|}
+    \label{tab:ep_classes}
+    \begin{tabular}{|c|p{8cm}|c|}
         \hline
-        \textbf{ID} & \textbf{Параметр} & \textbf{Класс} & \textbf{Тип} \\
+        \textbf{Класс} & \textbf{Описание} & \textbf{Валидный?} \\
         \hline
-        EP1 & Граф & Пустой & Valid \\
+        EP1 & Пустой граф & Да \\
         \hline
-        EP2 & Граф & DAG (ациклический) & Valid \\
+        EP2 & DAG (ациклический) & Да \\
         \hline
-        EP3 & Граф & С циклом & Invalid \\
+        EP3 & Граф с циклом & Нет \\
         \hline
-        EP4 & Граф & Несвязный DAG & Valid \\
-        \hline
-        EP5 & JSON & Невалидный формат & Invalid \\
+        EP4 & Некорректный формат & Нет \\
         \hline
     \end{tabular}
 \end{table}
@@ -39,19 +118,17 @@
     \centering
     \caption{Контрольные примеры для Equivalence Partitioning}
     \label{tab:ep_cases}
-    \begin{tabular}{|c|c|p{5cm}|p{4cm}|}
+    \begin{tabular}{|c|c|p{5.5cm}|p{3.5cm}|}
         \hline
-        \textbf{TC ID} & \textbf{Покрывает} & \textbf{Входные данные} & \textbf{Ожидаемый результат} \\
+        \textbf{TC ID} & \textbf{Класс} & \textbf{Входные данные} & \textbf{Ожидаемый результат} \\
         \hline
-        TC-EP1 & EP1 & vertices=[], edges=[] & [] \\
+        TC-EP-01 & EP1 & vertices: пусто; edges: пусто & sorted: пусто \\
         \hline
-        TC-EP2 & EP2 & vertices=[A,B,C], edges=[A→B, B→C] & [A,B,C] \\
+        TC-EP-02 & EP2 & vertices: [A, B, C]; edges: [A$\to$B, B$\to$C] & sorted: [A, B, C] \\
         \hline
-        TC-EP3 & EP3 & vertices=[A,B], edges=[A→B, B→A] & CycleException \\
+        TC-EP-03 & EP3 & vertices: [A, B]; edges: [A$\to$B, B$\to$A] & Ошибка: цикл \\
         \hline
-        TC-EP4 & EP4 & vertices=[A,B,X,Y], edges=[A→B, X→Y] & Любой корректный порядок \\
-        \hline
-        TC-EP5 & EP5 & "\{ invalid json" & JsonParseException \\
+        TC-EP-04 & EP4 & Невалидный JSON & Ошибка: некорректный формат \\
         \hline
     \end{tabular}
 \end{table}
@@ -60,27 +137,21 @@
 
 Метод анализа граничных значений направлен на тестирование значений на границах классов эквивалентности, поскольку именно на границах наиболее часто возникают ошибки.
 
-\subsection{Проверяемые условия}
+\subsection{Граничные значения}
 
-Граничные значения для параметров приложения представлены в таблице~\ref{tab:bva_items}.
+Граничные значения для параметров приложения представлены в таблице~\ref{tab:bva_boundaries}.
 
 \begin{table}[htbp]
     \centering
     \caption{Граничные значения параметров}
-    \label{tab:bva_items}
-    \begin{tabular}{|c|l|l|}
+    \label{tab:bva_boundaries}
+    \begin{tabular}{|l|l|}
         \hline
-        \textbf{ID} & \textbf{Параметр} & \textbf{Граница} \\
+        \textbf{Граница} & \textbf{Значения для теста} \\
         \hline
-        BV1 & Кол-во вершин & 0 \\
+        Количество вершин & 0, 1, 2, MAX \\
         \hline
-        BV2 & Кол-во вершин & 1 \\
-        \hline
-        BV3 & Кол-во вершин & Большое (1000) \\
-        \hline
-        BV4 & Кол-во рёбер & Максимум для DAG: $\frac{n(n-1)}{2}$ \\
-        \hline
-        BV5 & Длина пути & Максимальная (цепочка $n-1$) \\
+        Количество рёбер & 0, 1, n-1, n(n-1)/2 \\
         \hline
     \end{tabular}
 \end{table}
@@ -93,19 +164,21 @@
     \centering
     \caption{Контрольные примеры для Boundary Value Analysis}
     \label{tab:bva_cases}
-    \begin{tabular}{|c|c|p{5cm}|p{4cm}|}
+    \begin{tabular}{|c|p{2.5cm}|p{4.5cm}|p{3cm}|}
         \hline
-        \textbf{TC ID} & \textbf{Покрывает} & \textbf{Входные данные} & \textbf{Ожидаемый результат} \\
+        \textbf{TC ID} & \textbf{Граница} & \textbf{Входные данные} & \textbf{Ожидаемый результат} \\
         \hline
-        TC-BV1 & BV1 & 0 вершин & [] \\
+        TC-BVA-01 & 0 вершин & vertices: пусто; edges: пусто & [] \\
         \hline
-        TC-BV2 & BV2 & 1 вершина & [v1] \\
+        TC-BVA-02 & 1 вершина & vertices: [A]; edges: пусто & [A] \\
         \hline
-        TC-BV3 & BV3 & 1000 вершин (линейно) & Корректный порядок, $<1$с \\
+        TC-BVA-03 & 2 вершины, 0 рёбер & vertices: [A, B]; edges: пусто & [A, B] или [B, A] \\
         \hline
-        TC-BV4 & BV4 & 4 вершины, 6 рёбер (полный DAG) & Корректный порядок \\
+        TC-BVA-04 & 2 вершины, 1 ребро & vertices: [A, B]; edges: [A$\to$B] & [A, B] \\
         \hline
-        TC-BV5 & BV5 & Цепочка 10 вершин & [v1,v2,...,v10] \\
+        TC-BVA-05 & Полный DAG (3 верш.) & 3 вершины, 3 ребра & Валидный порядок \\
+        \hline
+        TC-BVA-06 & Большой граф & 1000 вершин линейно & Корректный порядок \\
         \hline
     \end{tabular}
 \end{table}
@@ -114,13 +187,15 @@
 
 Метод таблиц решений позволяет систематически рассмотреть все комбинации условий и соответствующих им действий системы.
 
-\subsection{Проверяемые условия}
+\subsection{Условия и действия}
 
 Для построения таблицы решений выделены следующие условия:
 \begin{itemize}
     \item C1: Граф пустой?
-    \item C2: Граф содержит цикл?
-    \item C3: JSON валиден?
+    \item C2: Есть цикл?
+    \item C3: Файл существует?
+    \item C4: JSON валидный?
+    \item C5: Алгоритм выбран?
 \end{itemize}
 
 Таблица решений представлена в таблице~\ref{tab:dt_rules}.
@@ -129,17 +204,35 @@
     \centering
     \caption{Таблица решений}
     \label{tab:dt_rules}
-    \begin{tabular}{|c|c|c|c|l|}
+    \begin{tabular}{|l|c|c|c|c|c|c|}
         \hline
-        \textbf{Rule} & \textbf{C1} & \textbf{C2} & \textbf{C3} & \textbf{Действие} \\
+        & \textbf{R1} & \textbf{R2} & \textbf{R3} & \textbf{R4} & \textbf{R5} & \textbf{R6} \\
         \hline
-        R1 & Y & -- & Y & Вернуть [] \\
+        \multicolumn{7}{|l|}{\textbf{Условия}} \\
         \hline
-        R2 & N & Y & Y & CycleException \\
+        Граф пустой? & Y & N & N & N & N & N \\
         \hline
-        R3 & N & N & Y & Вернуть порядок \\
+        Есть цикл? & -- & N & Y & N & N & N \\
         \hline
-        R4 & -- & -- & N & JsonParseException \\
+        Файл существует? & -- & Y & Y & N & Y & Y \\
+        \hline
+        JSON валидный? & -- & Y & Y & -- & N & Y \\
+        \hline
+        Алгоритм выбран? & -- & Y & Y & -- & -- & N \\
+        \hline
+        \multicolumn{7}{|l|}{\textbf{Действия}} \\
+        \hline
+        Вернуть пустой результат & X & & & & & \\
+        \hline
+        Выполнить сортировку & & X & & & & \\
+        \hline
+        Ошибка: цикл & & & X & & & \\
+        \hline
+        Ошибка: файл не найден & & & & X & & \\
+        \hline
+        Ошибка: невалидный JSON & & & & & X & \\
+        \hline
+        Запросить выбор алгоритма & & & & & & X \\
         \hline
     \end{tabular}
 \end{table}
@@ -151,18 +244,23 @@
 \begin{table}[htbp]
     \centering
     \caption{Контрольные примеры для Decision Table Testing}
+    \small
     \label{tab:dt_cases}
-    \begin{tabular}{|c|c|l|l|}
+    \begin{tabular}{|c|c|p{7cm}|}
         \hline
-        \textbf{TC ID} & \textbf{Rule} & \textbf{Описание} & \textbf{Результат} \\
+        \textbf{TC ID} & \textbf{Правило} & \textbf{Описание} \\
         \hline
-        TC-DT1 & R1 & Пустой граф & [] \\
+        TC-DT-01 & R1 & Пустой граф $\rightarrow$ пустой результат \\
         \hline
-        TC-DT2 & R2 & Граф с циклом & CycleException \\
+        TC-DT-02 & R2 & Валидный DAG $\rightarrow$ сортировка \\
         \hline
-        TC-DT3 & R3 & Корректный DAG & Топологический порядок \\
+        TC-DT-03 & R3 & Граф с циклом $\rightarrow$ ошибка \\
         \hline
-        TC-DT4 & R4 & Невалидный JSON & JsonParseException \\
+        TC-DT-04 & R4 & Несуществующий файл $\rightarrow$ ошибка \\
+        \hline
+        TC-DT-05 & R5 & Невалидный JSON $\rightarrow$ ошибка \\
+        \hline
+        TC-DT-06 & R6 & Не выбран алгоритм $\rightarrow$ запрос \\
         \hline
     \end{tabular}
 \end{table}
@@ -171,26 +269,21 @@
 
 Тестирование ветвей относится к методам структурного (white-box) тестирования и требует прохождения каждой ветви условных операторов в коде хотя бы один раз.
 
-\subsection{Проверяемые условия}
+\subsection{Ветви алгоритма DFS}
 
-Ключевые ветви алгоритмов DFS и Кана представлены в таблице~\ref{tab:br_items}.
-
-\begin{table}[htbp]
-    \centering
-    \caption{Ветви для тестирования}
-    \label{tab:br_items}
-    \begin{tabular}{|c|l|l|l|}
-        \hline
-        \textbf{ID} & \textbf{Ветвь} & \textbf{True} & \textbf{False} \\
-        \hline
-        BR1 & graph.isEmpty() & Пустой граф & Непустой \\
-        \hline
-        BR2 & recStack.contains(v) & Цикл найден & Нет цикла \\
-        \hline
-        BR3 & !visited.contains(v) & Новая вершина & Уже посещена \\
-        \hline
-    \end{tabular}
-\end{table}
+Структура ветвей алгоритма DFS представлена следующим образом:
+\begin{enumerate}
+    \item \texttt{if (graph.isEmpty())} $\rightarrow$ return empty
+    \item \texttt{for each vertex}:
+    \begin{enumerate}
+        \item \texttt{if (not visited)} $\rightarrow$ start DFS
+        \begin{enumerate}
+            \item \texttt{if (visiting - GRAY)} $\rightarrow$ cycle detected
+            \item \texttt{if (visited - BLACK)} $\rightarrow$ skip
+            \item \texttt{else} $\rightarrow$ process neighbors
+        \end{enumerate}
+    \end{enumerate}
+\end{enumerate}
 
 \subsection{Контрольные примеры}
 
@@ -200,22 +293,71 @@
     \centering
     \caption{Контрольные примеры для Branch Testing}
     \label{tab:br_cases}
-    \begin{tabular}{|c|l|p{4cm}|l|}
+    \begin{tabular}{|c|p{4cm}|p{4cm}|p{3.5cm}|}
         \hline
-        \textbf{TC ID} & \textbf{Покрывает} & \textbf{Входные данные} & \textbf{Путь} \\
+        \textbf{TC ID} & \textbf{Покрываемая ветвь} & \textbf{Входные данные} & \textbf{Путь} \\
         \hline
-        TC-BR1 & BR1-T & vertices=[] & isEmpty→true \\
+        TC-BR-01 & Ветвь 1 (true) & Пустой граф & isEmpty $\rightarrow$ true \\
         \hline
-        TC-BR2 & BR1-F, BR2-T & A→B→A & Цикл обнаружен \\
+        TC-BR-02 & Ветвь 1 (false), 2.1 (true) & Граф с одной вершиной & Обход одной вершины \\
         \hline
-        TC-BR3 & BR1-F, BR2-F, BR3-T/F & A→B→C & Полный обход \\
+        TC-BR-03 & Ветвь 2.1.1 (cycle) & Граф A$\rightarrow$B$\rightarrow$A & Цикл обнаружен \\
+        \hline
+        TC-BR-04 & Ветвь 2.1.2 (already visited) & Граф с общим потомком & Пропуск посещённой \\
+        \hline
+        TC-BR-05 & Ветвь 2.1.3 (process) & Линейный граф & Полный обход \\
         \hline
     \end{tabular}
 \end{table}
 
+\section{Оптимизация тестовых случаев} \label{ch3:optimization}
+
+После анализа разработанных тестовых случаев выявлено, что некоторые из них покрывают одинаковые сценарии. Это позволяет провести оптимизацию путём объединения тестов.
+
+\subsection{Объединённые тест-кейсы}
+
+В таблице~\ref{tab:optimized_cases} представлены оптимизированные тестовые случаи с указанием покрываемых исходных тестов.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Оптимизированные тестовые случаи}
+    \label{tab:optimized_cases}
+    \begin{tabular}{|l|p{8cm}|}
+        \hline
+        \textbf{Оптимизированный TC} & \textbf{Покрывает} \\
+        \hline
+        TC-OPT-01: Пустой граф & TC-EP-01, TC-BVA-01, TC-DT-01, TC-BR-01 \\
+        \hline
+        TC-OPT-02: Одна вершина & TC-BVA-02, TC-BR-02 \\
+        \hline
+        TC-OPT-03: Линейный DAG & TC-EP-02, TC-BVA-04, TC-DT-02, TC-BR-05 \\
+        \hline
+        TC-OPT-04: Цикл & TC-EP-03, TC-DT-03, TC-BR-03 \\
+        \hline
+        TC-OPT-05: Невалидный JSON & TC-EP-04, TC-DT-05 \\
+        \hline
+        TC-OPT-06: Несуществующий файл & TC-DT-04 \\
+        \hline
+        TC-OPT-07: Два несвязных компонента & TC-BVA-03 \\
+        \hline
+        TC-OPT-08: Полный DAG & TC-BVA-05 \\
+        \hline
+        TC-OPT-09: Большой граф & TC-BVA-06 \\
+        \hline
+        TC-OPT-10: Общий потомок & TC-BR-04 \\
+        \hline
+        TC-OPT-11: Без выбора алгоритма & TC-DT-06 \\
+        \hline
+        TC-OPT-12: Сравнение алгоритмов & Интеграционный тест \\
+        \hline
+    \end{tabular}
+\end{table}
+
+В результате оптимизации из 21 исходного тест-кейса получено 12 оптимизированных, что позволяет сократить трудозатраты на выполнение тестов без потери качества покрытия.
+
 \section{Сравнительный анализ методов тестирования} \label{ch3:comparison}
 
-\subsection{Сводная таблица}
+\subsection{Сводная таблица характеристик}
 
 Результаты применения различных методов тестирования представлены в таблице~\ref{tab:comparison}.
 
@@ -223,19 +365,65 @@
     \centering
     \caption{Сравнительная таблица методов тестирования}
     \label{tab:comparison}
-    \begin{tabular}{|l|c|c|l|l|}
+    \begin{tabular}{|l|c|c|p{2.5cm}|p{2.5cm}|}
         \hline
-        \textbf{Метод} & \textbf{Test Items} & \textbf{Test Cases} & \textbf{Покрытие} & \textbf{Трудозатраты} \\
+        \textbf{Метод} & \textbf{Test Cases} & \textbf{Покрытие вх. данных} & \textbf{Покрытие логики} & \textbf{Трудозатраты} \\
         \hline
-        Equivalence Partitioning & 5 & 5 & Функциональное & Низкие \\
+        Equivalence Partitioning & 4 & Высокое & Низкое & Низкие \\
         \hline
-        Boundary Value Analysis & 5 & 5 & Граничные случаи & Низкие \\
+        Boundary Value Analysis & 6 & Среднее & Низкое & Низкие \\
         \hline
-        Decision Table & 4 & 4 & Комбинации условий & Средние \\
+        Decision Table & 6 & Высокое & Высокое & Средние \\
         \hline
-        Branch Testing & 3 & 3 & Структурное & Высокие \\
+        Branch Testing & 5 & Низкое & Высокое & Высокие \\
         \hline
-        \textbf{ИТОГО} & \textbf{17} & \textbf{17} & --- & --- \\
+        \textbf{ИТОГО} & \textbf{21} & --- & --- & --- \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\subsection{Детальное сравнение методов}
+
+В таблице~\ref{tab:comparison_detailed} представлено детальное сравнение методов по различным критериям.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Детальное сравнение техник тестирования}
+    \label{tab:comparison_detailed}
+    \small
+    \begin{tabular}{|p{3cm}|c|c|c|c|}
+        \hline
+        \textbf{Критерий} & \textbf{EP} & \textbf{BVA} & \textbf{DT} & \textbf{Branch} \\
+        \hline
+        Обнаружение граничных дефектов & Низкое & Высокое & Среднее & Среднее \\
+        \hline
+        Применимость & Любые входы & Числ. данные & Комб. условий & Код \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\subsection{Оценка трудозатрат}
+
+В таблице~\ref{tab:effort} представлена оценка трудозатрат на применение каждого метода тестирования.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Оценка трудозатрат по методам тестирования}
+    \small
+    \label{tab:effort}
+    \begin{tabular}{|l|c|c|c|c|}
+        \hline
+        \textbf{Техника} & \textbf{Анализ} & \textbf{Создание} & \textbf{Поддер.} & \textbf{Итого} \\
+        \hline
+        Equivalence Partitioning & 1 ч & 1 ч & 0.5 ч & 2.5 ч \\
+        \hline
+        Boundary Value Analysis & 1 ч & 1.5 ч & 0.5 ч & 3 ч \\
+        \hline
+        Decision Table & 2 ч & 2 ч & 1 ч & 5 ч \\
+        \hline
+        Branch Testing & 3 ч & 2 ч & 1.5 ч & 6.5 ч \\
+        \hline
+        \textbf{Всего} & \textbf{7 ч} & \textbf{6.5 ч} & \textbf{3.5 ч} & \textbf{17 ч} \\
         \hline
     \end{tabular}
 \end{table}
@@ -244,77 +432,36 @@
 
 \textbf{Equivalence Partitioning.}
 \begin{itemize}
-    \item \textbf{Преимущества:}
-    \begin{itemize}
-        \item Значительное сокращение количества тестов при сохранении качества покрытия.
-        \item Логичная группировка входных данных, упрощающая анализ.
-        \item Простота создания и поддержки тестовых сценариев.
-        \item Эффективен на ранних этапах тестирования для быстрого покрытия основных сценариев.
-    \end{itemize}
-    \item \textbf{Недостатки:}
-    \begin{itemize}
-        \item Возможность пропуска ошибок на границах классов эквивалентности.
-        \item Субъективность при выделении классов эквивалентности.
-        \item Не учитывает комбинации нескольких параметров.
-        \item Может быть недостаточным для комплексного тестирования бизнес-логики.
-    \end{itemize}
+    \item \textbf{Преимущества:} минимум тестов, хорошее покрытие классов данных.
+    \item \textbf{Недостатки:} может пропустить граничные ошибки.
 \end{itemize}
 
 \textbf{Boundary Value Analysis.}
 \begin{itemize}
-    \item \textbf{Преимущества:}
-    \begin{itemize}
-        \item Высокая эффективность в обнаружении распространённых ошибок типа «off-by-one».
-        \item Отличное дополнение к методу Equivalence Partitioning.
-        \item Фокусировка на наиболее вероятных местах возникновения дефектов.
-        \item Простота применения для числовых диапазонов и упорядоченных данных.
-    \end{itemize}
-    \item \textbf{Недостатки:}
-    \begin{itemize}
-        \item Ограниченная применимость к нечисловым и неупорядоченным данным.
-        \item Требует чёткого понимания границ параметров системы.
-        \item Не покрывает комбинации граничных значений разных параметров.
-        \item Может быть избыточным при неявно заданных границах.
-    \end{itemize}
+    \item \textbf{Преимущества:} эффективно находит граничные ошибки.
+    \item \textbf{Недостатки:} применим не ко всем типам данных.
 \end{itemize}
 
 \textbf{Decision Table Testing.}
 \begin{itemize}
-    \item \textbf{Преимущества:}
-    \begin{itemize}
-        \item Систематическое покрытие всех значимых комбинаций условий.
-        \item Наглядность представления сложной бизнес-логики.
-        \item Исключение случайных пропусков в тестировании.
-        \item Позволяет выявить противоречия и неполноту требований.
-    \end{itemize}
-    \item \textbf{Недостатки:}
-    \begin{itemize}
-        \item Экспоненциальный рост числа правил при увеличении количества условий ($2^n$ комбинаций).
-        \item Трудоёмкость создания и поддержки таблиц решений для сложных систем.
-        \item Требует формализации и чёткого понимания бизнес-логики.
-        \item Может приводить к избыточному количеству тестовых случаев.
-    \end{itemize}
+    \item \textbf{Преимущества:} систематический, покрывает комбинации условий.
+    \item \textbf{Недостатки:} экспоненциальный рост при многих условиях.
 \end{itemize}
 
 \textbf{Branch Testing.}
 \begin{itemize}
-    \item \textbf{Преимущества:}
-    \begin{itemize}
-        \item Гарантирует прохождение всех ветвей кода алгоритма.
-        \item Позволяет выявить «мёртвый» (недостижимый) код.
-        \item Обеспечивает объективную метрику покрытия кода.
-        \item Эффективен для проверки сложных условных конструкций.
-    \end{itemize}
-    \item \textbf{Недостатки:}
-    \begin{itemize}
-        \item Требует доступа к исходному коду (white-box подход).
-        \item Не гарантирует проверки всех функциональных требований.
-        \item Высокая трудоёмкость разработки тестов для достижения полного покрытия.
-        \item Не учитывает комбинации путей выполнения программы.
-        \item Может быть недостаточным для обнаружения ошибок в бизнес-логике.
-    \end{itemize}
+    \item \textbf{Преимущества:} гарантирует покрытие кода.
+    \item \textbf{Недостатки:} требует знания внутренней структуры (white-box).
 \end{itemize}
 
 \section{Выводы} \label{ch3:conclusion}
 
-В данной главе разработана тестовая документация для приложения топологической сортировки с использованием четырёх методов: Equivalence Partitioning, Boundary Value Analysis, Decision Table Testing и Branch Testing. Всего разработано 17 проверяемых условий и 17 контрольных примеров.
+В данной главе разработана тестовая документация для приложения топологической сортировки с использованием четырёх методов: Equivalence Partitioning, Boundary Value Analysis, Decision Table Testing и Branch Testing.
+
+Определено 16 проверяемых условий, распределённых по трём категориям: входные данные (8 условий), выходные данные (4 условия) и внутренняя обработка (4 условия).
+
+Всего разработан 21 контрольный пример: 4 для Equivalence Partitioning, 6 для Boundary Value Analysis, 6 для Decision Table Testing и 5 для Branch Testing. После оптимизации количество тестовых случаев сокращено до 12 без потери качества покрытия.
+
+Общие трудозатраты на разработку тестовой документации составили 17 человеко-часов. Наиболее трудоёмким оказался метод Branch Testing (6.5 ч), наименее трудоёмким --- Equivalence Partitioning (2.5 ч).
+
+Рекомендуется применять комбинацию методов EP и BVA для базового покрытия входных данных, дополняя их Decision Table Testing для проверки бизнес-логики и Branch Testing для обеспечения структурного покрытия кода.

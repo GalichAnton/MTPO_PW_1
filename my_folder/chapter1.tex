@@ -11,53 +11,40 @@
 \begin{figure}[htbp]
     \centering
     \begin{tikzpicture}[
-        actor/.style={circle, draw, minimum size=1cm, font=\small},
-        usecase/.style={ellipse, draw, minimum width=3.2cm, minimum height=0.9cm, align=center, font=\footnotesize},
-        include/.style={ellipse, draw, dashed, minimum width=2.5cm, minimum height=0.7cm, align=center, font=\scriptsize},
-        arrow/.style={->, >=stealth},
-        inclarrow/.style={->, >=stealth, dashed}
+        box/.style={draw, rectangle, minimum width=11cm, minimum height=9cm, thick},
+        header/.style={fill=gray!20, font=\bfseries, minimum width=11cm, minimum height=0.8cm},
+        actor/.style={draw, rectangle, minimum width=2cm, minimum height=1.2cm, font=\small, align=center},
+        action/.style={font=\small}
     ]
 
-% Актор
-        \node[actor] (user) at (0,-6.5) {User};
+        % Граница системы
+        \node[box] (system) at (0,0) {};
 
-% Use Cases - увеличены вертикальные интервалы
-        \node[usecase] (uc1) at (5.5,-1) {UC1: Показать справку};
-        \node[usecase] (uc2) at (5.5,-2.8) {UC2: Ввести граф вручную};
-        \node[usecase] (uc3) at (5.5,-4.6) {UC3: Загрузить граф из JSON};
-        \node[usecase] (uc4) at (5.5,-6.4) {UC4: Выбрать алгоритм};
-        \node[usecase] (uc5) at (5.5,-9) {UC5: Выполнить сортировку};
-        \node[usecase] (uc6) at (5.5,-11) {UC6: Вывод в консоль};
-        \node[usecase] (uc7) at (5.5,-12.5) {UC7: Сохранить в JSON};
-        \node[usecase] (uc8) at (5.5,-13.5) {UC8: Сравнить алгоритмы};
+        % Заголовок системы
+        \node[header, anchor=south] at (system.north) {Система топологической сортировки};
 
-% Include relationships - сдвинуты вправо
-        \node[include] (val) at (11,-2.8) {Валидация ввода};
-        \node[include] (parse) at (11,-4.6) {Парсинг файла};
-        \node[include] (cycle) at (11,-9) {Проверка на циклы};
+        % Актор (пользователь) слева
+        \node[actor] (user) at (-7, 0) {Пользо-\\ватель};
 
-% Алгоритмы - размещены ниже UC4 с отступом
-        \node[include] (dfs) at (4,-7.7) {DFS-based};
-        \node[include] (kahn) at (7.5,-7.7) {Алгоритм Кана};
+        % Функции системы (варианты использования) справа от актора
+        \node[action, anchor=west] (uc1) at (-4.5, 3.5) {Показать справку};
+        \node[action, anchor=west] (uc2) at (-4.5, 2.5) {Ввести граф вручную};
+        \node[action, anchor=west] (uc3) at (-4.5, 1.5) {Загрузить граф из JSON-файла};
+        \node[action, anchor=west] (uc4) at (-4.5, 0.5) {Выбрать алгоритм (DFS / Kahn)};
+        \node[action, anchor=west] (uc5) at (-4.5, -0.5) {Выполнить сортировку};
+        \node[action, anchor=west] (uc6) at (-4.5, -1.5) {Сравнить алгоритмы};
+        \node[action, anchor=west] (uc7) at (-4.5, -2.5) {Сохранить результат в файл};
+        \node[action, anchor=west] (uc8) at (-4.5, -3.5) {Показать текущий граф};
 
-% Связи актора с use case
-        \draw[arrow] (user) -- (uc1);
-        \draw[arrow] (user) -- (uc2);
-        \draw[arrow] (user) -- (uc3);
-        \draw[arrow] (user) -- (uc4);
-        \draw[arrow] (user) -- (uc5);
-        \draw[arrow] (user) -- (uc6);
-        \draw[arrow] (user) -- (uc7);
-        \draw[arrow] (user) -- (uc8);
-
-% Include связи
-        \draw[inclarrow] (uc2) -- (val) node[midway, above, font=\tiny] {<<include>>};
-        \draw[inclarrow] (uc3) -- (parse) node[midway, above, font=\tiny] {<<include>>};
-        \draw[inclarrow] (uc5) -- (cycle) node[midway, above, font=\tiny] {<<include>>};
-
-% Связи выбора алгоритма
-        \draw[inclarrow] (uc4) -- (dfs);
-        \draw[inclarrow] (uc4) -- (kahn);
+        % Стрелки от пользователя к функциям
+        \draw[->, thick] (user.east) -- (uc1.west);
+        \draw[->, thick] (user.east) -- (uc2.west);
+        \draw[->, thick] (user.east) -- (uc3.west);
+        \draw[->, thick] (user.east) -- (uc4.west);
+        \draw[->, thick] (user.east) -- (uc5.west);
+        \draw[->, thick] (user.east) -- (uc6.west);
+        \draw[->, thick] (user.east) -- (uc7.west);
+        \draw[->, thick] (user.east) -- (uc8.west);
 
     \end{tikzpicture}
     \caption{Диаграмма вариантов использования приложения}
@@ -67,13 +54,14 @@
 
 Система поддерживает восемь основных вариантов использования:
 \begin{itemize}
-    \item \textbf{UC1} --- просмотр справочной информации о программе и алгоритмах;
-    \item \textbf{UC2} --- ручной ввод графа с валидацией входных данных;
-    \item \textbf{UC3} --- загрузка графа из JSON-файла с парсингом;
-    \item \textbf{UC4} --- выбор алгоритма сортировки (DFS или Кана);
-    \item \textbf{UC5} --- выполнение топологической сортировки с проверкой на циклы;
-    \item \textbf{UC6} --- вывод результатов в консоль;
-    \item \textbf{UC7} --- сохранение результатов в JSON-файл;
+    \item \textbf{Показать справку} --- просмотр справочной информации о программе и алгоритмах;
+    \item \textbf{Ввести граф вручную} --- ручной ввод графа с валидацией входных данных;
+    \item \textbf{Загрузить граф из JSON-файла} --- загрузка графа из внешнего файла с парсингом;
+    \item \textbf{Выбрать алгоритм (DFS / Kahn)} --- выбор алгоритма топологической сортировки;
+    \item \textbf{Выполнить сортировку} --- запуск топологической сортировки с проверкой на циклы;
+    \item \textbf{Сравнить алгоритмы} --- сравнительный анализ работы обоих алгоритмов;
+    \item \textbf{Сохранить результат в файл} --- сохранение результатов в JSON-формате;
+    \item \textbf{Показать текущий граф} --- вывод структуры загруженного графа.
 \end{itemize}
 
 \section{Меню приложения} \label{sec:menu}
@@ -188,3 +176,4 @@
 \section{Выводы} \label{sec:design-conclusion}
 
 В данной главе выполнено проектирование приложения для топологической сортировки графов. Разработана диаграмма вариантов использования, определяющая восемь основных сценариев взаимодействия пользователя с системой. Спроектирован консольный интерфейс с интуитивно понятным меню. Определена модульная структура проекта, обеспечивающая разделение ответственности между компонентами и удобство тестирования.
+\clearpage

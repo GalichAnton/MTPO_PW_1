@@ -1,24 +1,498 @@
-\chapter{Название четвёртой главы. Апробация результатов исследования, а~именно: метода, алгоритма, модели исследования} \label{ch4}
+\chapter{Выбор и анализ использования стека для написания модульных тестов} \label{ch4}
 
-% не рекомендуется использовать отдельную section <<введение>> после лета 2020 года
-%\section{Введение} \label{ch4:intro}
+\section{Выбор библиотеки модульного тестирования} \label{ch4:choice}
 
-Хорошим стилем является наличие введения к главе. Во введении может быть описана цель написания главы, а также приведена краткая структура главы. 
-	
-\section{Название параграфа} \label{ch4:sec1}
+Для реализации модульных тестов в проекте выбран фреймворк \textbf{JUnit~5} по следующим причинам:
+\begin{itemize}
+    \item \textbf{Современная архитектура} --- JUnit~5 построен на модульной платформе JUnit Platform, что обеспечивает гибкость и расширяемость;
+    \item \textbf{Богатый набор аннотаций} --- поддержка вложенных тестов, параметризованных тестов, условного выполнения;
+    \item \textbf{Улучшенные assertions} --- расширенный API для проверок с поддержкой лямбда-выражений;
+    \item \textbf{Обратная совместимость} --- возможность запуска тестов JUnit~4 через модуль vintage;
+    \item \textbf{Активное развитие} --- регулярные обновления и поддержка сообщества;
+    \item \textbf{Интеграция с инструментами сборки} --- нативная поддержка в Maven и Gradle.
+\end{itemize}
 
-\section{Название параграфа} \label{ch4:sec2}
+\subsection{Стек технологий тестирования}
 
-Пример ссылки на литературу \cite{avtonomova:fya,Peskov2004-ru,Kotelnikov2004-ru,Kotelnikov2004}.
+Помимо JUnit~5, в проекте используются дополнительные библиотеки для повышения качества и удобства написания тестов. В таблице~\ref{tab:test_stack} представлен полный стек технологий тестирования.
 
-%\FloatBarrier % заставить рисунки и другие подвижные (float) элементы остановиться
+\begin{table}[htbp]
+    \centering
+    \caption{Стек технологий тестирования проекта}
+    \label{tab:test_stack}
+    \begin{tabular}{|l|l|p{6cm}|}
+        \hline
+        \textbf{Библиотека} & \textbf{Версия} & \textbf{Назначение} \\
+        \hline
+        JUnit 5 & 5.10.2 & Основной фреймворк тестирования \\
+        \hline
+        Hamcrest & 2.2 & Библиотека матчеров для читаемых assertions \\
+        \hline
+        Mockito & 5.11.0 & Фреймворк для создания mock-объектов \\
+        \hline
+        JaCoCo & 0.8.11 & Измерение покрытия кода тестами \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{Архитектура JUnit 5} \label{ch4:junit5}
+
+JUnit~5 состоит из трёх основных модулей, представленных на рисунке~\ref{fig:junit5_arch}.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        module/.style={draw, rectangle, rounded corners, minimum width=4cm, minimum height=1.2cm, align=center, font=\small},
+        platform/.style={module, fill=blue!20},
+        jupiter/.style={module, fill=green!20},
+        vintage/.style={module, fill=orange!20}
+    ]
+        % JUnit Platform
+        \node[platform] (platform) at (0, 0) {\textbf{JUnit Platform}\\Запуск тестов};
+
+        % JUnit Jupiter
+        \node[jupiter] (jupiter) at (-3.5, 2.5) {\textbf{JUnit Jupiter}\\API и Engine\\(JUnit 5)};
+
+        % JUnit Vintage
+        \node[vintage] (vintage) at (3.5, 2.5) {\textbf{JUnit Vintage}\\Поддержка\\JUnit 3/4};
+
+        % Arrows
+        \draw[->, thick] (jupiter.south) -- (platform.north west);
+        \draw[->, thick] (vintage.south) -- (platform.north east);
+
+        % Labels
+        \node[font=\footnotesize, anchor=north] at (0, -1) {Общая платформа для запуска тестовых фреймворков};
+
+    \end{tikzpicture}
+    \caption{Архитектура JUnit 5}
+    \label{fig:junit5_arch}
+\end{figure}
+
+\begin{itemize}
+    \item \textbf{JUnit Platform} --- базовая платформа для запуска тестовых фреймворков на JVM. Предоставляет API для создания тестовых движков и интеграции с IDE и инструментами сборки;
+    \item \textbf{JUnit Jupiter} --- новая модель программирования и расширения для написания тестов в JUnit~5. Включает API для разработчиков тестов и движок для их выполнения;
+    \item \textbf{JUnit Vintage} --- обеспечивает обратную совместимость с тестами, написанными на JUnit~3 и JUnit~4.
+\end{itemize}
+
+\section{Основные аннотации JUnit 5} \label{ch4:annotations}
+
+JUnit~5 предоставляет набор аннотаций для управления жизненным циклом тестов. В таблице~\ref{tab:junit_annotations} представлены основные аннотации, используемые в проекте.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Основные аннотации JUnit 5}
+    \label{tab:junit_annotations}
+    \begin{tabular}{|l|p{9cm}|}
+        \hline
+        \textbf{Аннотация} & \textbf{Описание} \\
+        \hline
+        \texttt{@Test} & Помечает метод как тестовый. Метод должен быть не приватным и не возвращать значение \\
+        \hline
+        \texttt{@DisplayName} & Задаёт человекочитаемое имя для теста или тестового класса \\
+        \hline
+        \texttt{@BeforeEach} & Метод выполняется перед каждым тестом. Используется для инициализации \\
+        \hline
+        \texttt{@AfterEach} & Метод выполняется после каждого теста. Используется для очистки ресурсов \\
+        \hline
+        \texttt{@BeforeAll} & Метод выполняется один раз перед всеми тестами класса (статический) \\
+        \hline
+        \texttt{@AfterAll} & Метод выполняется один раз после всех тестов класса (статический) \\
+        \hline
+        \texttt{@Disabled} & Отключает тест или тестовый класс \\
+        \hline
+        \texttt{@Nested} & Позволяет создавать вложенные тестовые классы для логической группировки \\
+        \hline
+        \texttt{@Tag} & Присваивает тег для фильтрации тестов при запуске \\
+        \hline
+        \texttt{@Timeout} & Задаёт максимальное время выполнения теста \\
+        \hline
+    \end{tabular}
+\end{table}
+\FloatBarrier
+
+
+\subsection{Жизненный цикл тестов}
+
+На рисунке~\ref{fig:lifecycle} представлен жизненный цикл выполнения тестов в JUnit~5.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        node distance=1.5cm,
+        block/.style={draw, rectangle, rounded corners, minimum width=3.5cm, minimum height=0.8cm, align=center, font=\small},
+        arrow/.style={->, thick}
+    ]
+        \node[block, fill=yellow!30] (beforeall) {@BeforeAll};
+        \node[block, fill=blue!20, below of=beforeall] (beforeeach1) {@BeforeEach};
+        \node[block, fill=green!20, below of=beforeeach1] (test1) {@Test (тест 1)};
+        \node[block, fill=red!20, below of=test1] (aftereach1) {@AfterEach};
+        \node[block, fill=blue!20, below of=aftereach1] (beforeeach2) {@BeforeEach};
+        \node[block, fill=green!20, below of=beforeeach2] (test2) {@Test (тест 2)};
+        \node[block, fill=red!20, below of=test2] (aftereach2) {@AfterEach};
+        \node[block, fill=yellow!30, below of=aftereach2] (afterall) {@AfterAll};
+
+        \draw[arrow] (beforeall) -- (beforeeach1);
+        \draw[arrow] (beforeeach1) -- (test1);
+        \draw[arrow] (test1) -- (aftereach1);
+        \draw[arrow] (aftereach1) -- (beforeeach2);
+        \draw[arrow] (beforeeach2) -- (test2);
+        \draw[arrow] (test2) -- (aftereach2);
+        \draw[arrow] (aftereach2) -- (afterall);
+
+        \draw[decorate, decoration={brace, amplitude=10pt, mirror}]
+        (4, -1.5) -- (4, -5.5) node[midway, right=12pt, font=\small] {Повторяется для каждого теста};
+    \end{tikzpicture}
+    \caption{Жизненный цикл тестов JUnit 5}
+    \label{fig:lifecycle}
+\end{figure}
+\FloatBarrier
+
+
+\section{Методы проверки утверждений (Assertions)} \label{ch4:assertions}
+
+Класс \texttt{org.junit.jupiter.api.Assertions} предоставляет статические методы для проверки условий в тестах. В таблице~\ref{tab:assertions} представлены основные методы assertions.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Основные методы assertions в JUnit 5}
+    \label{tab:assertions}
+    \begin{tabular}{|l|p{7cm}|}
+        \hline
+        \textbf{Метод} & \textbf{Описание} \\
+        \hline
+        \texttt{assertEquals(expected, actual)} & Проверяет равенство двух значений \\
+        \hline
+        \texttt{assertNotEquals(unexpected, actual)} & Проверяет неравенство значений \\
+        \hline
+        \texttt{assertTrue(condition)} & Проверяет, что условие истинно \\
+        \hline
+        \texttt{assertFalse(condition)} & Проверяет, что условие ложно \\
+        \hline
+        \texttt{assertNull(object)} & Проверяет, что объект равен null \\
+        \hline
+        \texttt{assertNotNull(object)} & Проверяет, что объект не равен null \\
+        \hline
+        \texttt{assertThrows(exception, executable)} & Проверяет, что код выбрасывает исключение \\
+        \hline
+        \texttt{assertDoesNotThrow(executable)} & Проверяет, что код не выбрасывает исключений \\
+        \hline
+        \texttt{assertAll(executables...)} & Выполняет группу проверок \\
+        \hline
+        \texttt{assertTimeout(duration, executable)} & Проверяет выполнение в пределах времени \\
+        \hline
+        \texttt{assertIterableEquals(expected, actual)} & Сравнивает коллекции поэлементно \\
+        \hline
+    \end{tabular}
+\end{table}
+\FloatBarrier
+
+
+Все методы assertions поддерживают опциональный параметр \texttt{message}, который выводится при неудачном выполнении проверки. Это позволяет создавать информативные сообщения об ошибках.
+
+\section{Библиотека Hamcrest} \label{ch4:hamcrest}
+
+\textbf{Hamcrest} --- это библиотека матчеров (matchers) для создания более читаемых и выразительных проверок в тестах. Название является анаграммой слова «matchers».
+
+\subsection{Преимущества использования Hamcrest}
+
+Основные преимущества Hamcrest по сравнению со стандартными assertions:
+\begin{itemize}
+    \item \textbf{Читаемость} --- проверки читаются как естественный язык;
+    \item \textbf{Информативные сообщения} --- при неудаче выводится понятное описание ожидаемого и фактического значений;
+    \item \textbf{Комбинируемость} --- матчеры можно комбинировать для создания сложных проверок;
+    \item \textbf{Расширяемость} --- возможность создания собственных матчеров.
+\end{itemize}
+
+\subsection{Основные матчеры Hamcrest}
+
+В таблице~\ref{tab:hamcrest_matchers} представлены основные матчеры библиотеки Hamcrest, используемые в проекте.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Основные матчеры Hamcrest}
+    \label{tab:hamcrest_matchers}
+    \begin{tabular}{|l|p{7cm}|}
+        \hline
+        \textbf{Матчер} & \textbf{Описание} \\
+        \hline
+        \multicolumn{2}{|l|}{\textit{Базовые матчеры}} \\
+        \hline
+        \texttt{is(value)} & Проверяет равенство значению \\
+        \hline
+        \texttt{equalTo(value)} & Синоним \texttt{is()} для равенства \\
+        \hline
+        \texttt{not(matcher)} & Инвертирует результат матчера \\
+        \hline
+        \texttt{nullValue()} & Проверяет, что значение null \\
+        \hline
+        \texttt{notNullValue()} & Проверяет, что значение не null \\
+        \hline
+        \texttt{instanceOf(class)} & Проверяет тип объекта \\
+        \hline
+        \multicolumn{2}{|l|}{\textit{Матчеры для чисел}} \\
+        \hline
+        \texttt{greaterThan(value)} & Больше указанного значения \\
+        \hline
+        \texttt{lessThan(value)} & Меньше указанного значения \\
+        \hline
+        \texttt{closeTo(value, delta)} & Близко к значению с погрешностью \\
+        \hline
+        \multicolumn{2}{|l|}{\textit{Матчеры для строк}} \\
+        \hline
+        \texttt{containsString(str)} & Содержит подстроку \\
+        \hline
+        \texttt{startsWith(prefix)} & Начинается с префикса \\
+        \hline
+        \texttt{endsWith(suffix)} & Заканчивается суффиксом \\
+        \hline
+        \texttt{equalToIgnoringCase(str)} & Равенство без учёта регистра \\
+        \hline
+        \multicolumn{2}{|l|}{\textit{Матчеры для коллекций}} \\
+        \hline
+        \texttt{hasSize(size)} & Проверяет размер коллекции \\
+        \hline
+        \texttt{hasItem(item)} & Содержит элемент \\
+        \hline
+        \texttt{hasItems(items...)} & Содержит все указанные элементы \\
+        \hline
+        \texttt{contains(items...)} & Содержит элементы в указанном порядке \\
+        \hline
+        \texttt{empty()} & Коллекция пуста \\
+        \hline
+        \multicolumn{2}{|l|}{\textit{Логические комбинаторы}} \\
+        \hline
+        \texttt{allOf(matchers...)} & Все матчеры должны совпасть (И) \\
+        \hline
+        \texttt{anyOf(matchers...)} & Хотя бы один матчер совпадёт (ИЛИ) \\
+        \hline
+        \texttt{both(m1).and(m2)} & Оба матчера должны совпасть \\
+        \hline
+        \texttt{either(m1).or(m2)} & Один из матчеров должен совпасть \\
+        \hline
+    \end{tabular}
+\end{table}
+
+Использование Hamcrest осуществляется через метод \texttt{assertThat(actual, matcher)}, который принимает проверяемое значение и матчер для сравнения.
+
+\section{Фреймворк Mockito} \label{ch4:mockito}
+
+\textbf{Mockito} --- это популярный фреймворк для создания mock-объектов (имитаций) в Java. Mock-объекты позволяют изолировать тестируемый код от его зависимостей, что является ключевым аспектом модульного тестирования.
+
+\subsection{Основные концепции Mockito}
+
+Mockito оперирует следующими понятиями:
+\begin{itemize}
+    \item \textbf{Mock} --- полностью имитированный объект, все методы которого по умолчанию возвращают null, 0 или false;
+    \item \textbf{Spy} --- частичная имитация реального объекта, позволяющая переопределить только отдельные методы;
+    \item \textbf{Stub} --- настройка поведения mock-объекта для возврата определённых значений;
+    \item \textbf{Verify} --- проверка того, что метод был вызван с определёнными параметрами.
+\end{itemize}
+
+\subsection{Основные методы Mockito}
+
+В таблице~\ref{tab:mockito_methods} представлены основные методы фреймворка Mockito.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Основные методы Mockito}
+    \label{tab:mockito_methods}
+    \begin{tabular}{|l|p{7cm}|}
+        \hline
+        \textbf{Метод} & \textbf{Описание} \\
+        \hline
+        \multicolumn{2}{|l|}{\textit{Создание mock-объектов}} \\
+        \hline
+        \texttt{mock(Class)} & Создаёт mock-объект указанного класса \\
+        \hline
+        \texttt{spy(object)} & Создаёт spy на основе реального объекта \\
+        \hline
+        \texttt{@Mock} & Аннотация для автоматического создания mock \\
+        \hline
+        \texttt{@Spy} & Аннотация для автоматического создания spy \\
+        \hline
+        \texttt{@InjectMocks} & Внедряет mock-объекты в тестируемый класс \\
+        \hline
+        \multicolumn{2}{|l|}{\textit{Настройка поведения (stubbing)}} \\
+        \hline
+        \texttt{when(mock.method()).thenReturn(value)} & Возвращает значение при вызове метода \\
+        \hline
+        \texttt{when(...).thenThrow(exception)} & Выбрасывает исключение при вызове \\
+        \hline
+        \texttt{when(...).thenAnswer(answer)} & Задаёт динамический ответ \\
+        \hline
+        \texttt{doReturn(value).when(mock).method()} & Альтернативный синтаксис для spy \\
+        \hline
+        \multicolumn{2}{|l|}{\textit{Верификация вызовов}} \\
+        \hline
+        \texttt{verify(mock).method()} & Проверяет, что метод был вызван \\
+        \hline
+        \texttt{verify(mock, times(n)).method()} & Проверяет количество вызовов \\
+        \hline
+        \texttt{verify(mock, never()).method()} & Проверяет, что метод не вызывался \\
+        \hline
+        \texttt{verify(mock, atLeast(n)).method()} & Минимум n вызовов \\
+        \hline
+        \texttt{verifyNoMoreInteractions(mock)} & Нет других вызовов \\
+        \hline
+        \multicolumn{2}{|l|}{\textit{Argument matchers}} \\
+        \hline
+        \texttt{any()} & Любой аргумент \\
+        \hline
+        \texttt{anyString()}, \texttt{anyInt()}, ... & Любой аргумент указанного типа \\
+        \hline
+        \texttt{eq(value)} & Точное значение аргумента \\
+        \hline
+        \texttt{argThat(matcher)} & Аргумент, соответствующий матчеру \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\subsection{Аннотации Mockito}
+
+Для упрощения работы с mock-объектами Mockito предоставляет аннотации. При использовании с JUnit~5 необходимо добавить расширение \texttt{@ExtendWith(MockitoExtension.class)} к тестовому классу. В таблице~\ref{tab:mockito_annotations} описаны основные аннотации.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Аннотации Mockito}
+    \label{tab:mockito_annotations}
+    \begin{tabular}{|l|p{8cm}|}
+        \hline
+        \textbf{Аннотация} & \textbf{Описание} \\
+        \hline
+        \texttt{@Mock} & Создаёт mock-объект для поля \\
+        \hline
+        \texttt{@Spy} & Создаёт spy-объект для поля \\
+        \hline
+        \texttt{@InjectMocks} & Создаёт экземпляр класса и внедряет в него все mock/spy объекты \\
+        \hline
+        \texttt{@Captor} & Создаёт ArgumentCaptor для захвата аргументов \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\subsection{Применение Mockito в проекте}
+
+В проекте топологической сортировки Mockito используется для:
+\begin{itemize}
+    \item Изоляции тестов валидатора от конкретных реализаций алгоритмов;
+    \item Тестирования обработки ошибок ввода-вывода в \texttt{JsonGraphHandler};
+    \item Проверки взаимодействия между компонентами приложения;
+    \item Имитации поведения графа при тестировании граничных случаев.
+\end{itemize}
+
+\section{Продвинутые возможности JUnit 5} \label{ch4:advanced}
+
+\subsection{Параметризованные тесты}
+
+JUnit~5 предоставляет мощную поддержку параметризованных тестов через модуль \texttt{junit-jupiter-params}. Это позволяет запускать один и тот же тест с различными входными данными. В таблице~\ref{tab:param_sources} представлены источники параметров.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Источники параметров для параметризованных тестов}
+    \label{tab:param_sources}
+    \begin{tabular}{|l|p{8cm}|}
+        \hline
+        \textbf{Аннотация} & \textbf{Описание} \\
+        \hline
+        \texttt{@ValueSource} & Простые значения: строки, числа, классы \\
+        \hline
+        \texttt{@EnumSource} & Значения перечисления \\
+        \hline
+        \texttt{@MethodSource} & Метод, возвращающий Stream аргументов \\
+        \hline
+        \texttt{@CsvSource} & Данные в формате CSV \\
+        \hline
+        \texttt{@CsvFileSource} & CSV-данные из внешнего файла \\
+        \hline
+        \texttt{@ArgumentsSource} & Пользовательский провайдер аргументов \\
+        \hline
+    \end{tabular}
+\end{table}
+
+Параметризованные тесты особенно полезны для проверки поведения алгоритмов на различных входных данных, что активно применяется в тестах класса \texttt{Graph} и алгоритмов сортировки.
+
+\subsection{Вложенные тесты}
+
+Аннотация \texttt{@Nested} позволяет создавать вложенные тестовые классы для логической группировки тестов. Это особенно полезно при тестировании различных состояний объекта или сценариев использования. Вложенные классы наследуют методы \texttt{@BeforeEach} и \texttt{@AfterEach} от родительского класса.
+
+\subsection{Условное выполнение тестов}
+
+JUnit~5 поддерживает условное выполнение тестов в зависимости от операционной системы, версии JVM или пользовательских условий. В таблице~\ref{tab:conditional} представлены основные аннотации.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Аннотации условного выполнения}
+    \label{tab:conditional}
+    \begin{tabular}{|l|p{7cm}|}
+        \hline
+        \textbf{Аннотация} & \textbf{Описание} \\
+        \hline
+        \texttt{@EnabledOnOs} & Выполняется только на указанных ОС \\
+        \hline
+        \texttt{@DisabledOnOs} & Отключается на указанных ОС \\
+        \hline
+        \texttt{@EnabledOnJre} & Выполняется на указанных версиях JRE \\
+        \hline
+        \texttt{@EnabledIf} & Выполняется при истинности условия \\
+        \hline
+        \texttt{@EnabledIfSystemProperty} & Зависит от системного свойства \\
+        \hline
+        \texttt{@EnabledIfEnvironmentVariable} & Зависит от переменной окружения \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{Запуск тестов и измерение покрытия} \label{ch4:running}
+
+\subsection{Команды Maven}
+
+Для запуска тестов используются команды Maven, представленные в таблице~\ref{tab:maven_commands}.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Команды Maven для работы с тестами}
+    \label{tab:maven_commands}
+    \begin{tabular}{|l|p{7cm}|}
+        \hline
+        \textbf{Команда} & \textbf{Описание} \\
+        \hline
+        \texttt{mvn test} & Запуск всех тестов проекта \\
+        \hline
+        \texttt{mvn test -Dtest=GraphTest} & Запуск конкретного тестового класса \\
+        \hline
+        \texttt{mvn test -Dtest=GraphTest\#testAddVertex} & Запуск конкретного теста \\
+        \hline
+        \texttt{mvn verify} & Запуск тестов с проверкой покрытия \\
+        \hline
+        \texttt{mvn surefire-report:report} & Генерация отчёта о тестировании \\
+        \hline
+        \texttt{mvn jacoco:report} & Генерация отчёта о покрытии кода \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\subsection{Измерение покрытия кода}
+
+Для измерения покрытия кода тестами используется плагин JaCoCo (Java Code Coverage). Плагин автоматически инструментирует байт-код и собирает статистику выполнения тестов. Основные метрики покрытия:
+\begin{itemize}
+    \item \textbf{Line Coverage} --- процент выполненных строк кода;
+    \item \textbf{Branch Coverage} --- процент выполненных ветвей условных операторов;
+    \item \textbf{Method Coverage} --- процент вызванных методов;
+    \item \textbf{Class Coverage} --- процент классов, в которых выполнен хотя бы один метод.
+\end{itemize}
 
 \section{Выводы} \label{ch4:conclusion}
 
-Текст выводов по главе \thechapter.
+В данной главе рассмотрены инструменты модульного тестирования, используемые в проекте топологической сортировки графов.
 
-%% Вспомогательные команды - Additional commands
-%
-%\newpage % принудительное начало с новой страницы, использовать только в конце раздела
-%\clearpage % осуществляется пакетом <<placeins>> в пределах секций
-%\newpage\leavevmode\thispagestyle{empty}\newpage % 100 % начало новой страницы
+Проведён сравнительный анализ популярных фреймворков тестирования. На основании критериев актуальности, расширяемости и функциональности выбран JUnit~5 как основной инструмент. Дополнительно в стек технологий включены библиотека Hamcrest для создания выразительных проверок и фреймворк Mockito для изоляции тестируемых компонентов.
+
+Подробно рассмотрена архитектура JUnit~5, включающая три модуля: JUnit Platform, JUnit Jupiter и JUnit Vintage. Описаны основные аннотации для управления жизненным циклом тестов и методы assertions для проверки условий.
+
+Представлены возможности библиотеки Hamcrest: матчеры для базовых типов, строк, коллекций и их комбинирование. Описаны основные концепции и методы фреймворка Mockito: создание mock-объектов, настройка их поведения и верификация вызовов.
+
+Изучены продвинутые возможности JUnit~5: параметризованные тесты с различными источниками данных, вложенные тестовые классы для логической группировки и условное выполнение тестов.
+
+Выбранный стек технологий (JUnit~5 + Hamcrest + Mockito) обеспечивает все необходимые возможности для качественного модульного тестирования: структурирование тестов, выразительные проверки, изоляцию компонентов и измерение покрытия кода.
+
+\clearpage
