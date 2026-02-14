@@ -13,9 +13,12 @@
 
 
 %%%% Подключение библиографии / Upload bibliography
-%% 
-%% 
-\addbibresource{my_folder/my_biblio.bib} % 
+%%
+%%
+
+%! suppress = FileNotFound
+\addbibresource {my_biblio.bib}
+ %
 
 
 
@@ -42,6 +45,9 @@
 \usepackage{forest}
 \tcbuselibrary{skins, breakable}
 \usepackage{float}
+\usepackage{pmboxdraw}
+\usetikzlibrary{decorations.pathreplacing}
+
 
 %%%% Настройка шрифта 12pt для всех таблиц в документе
 \usepackage{etoolbox}
@@ -112,3 +118,11 @@
 % вместо m-new-env-second необходимо подставить название нового окружения;
 % вместо Название\_окружения необходимо подставить название окружения, выводящееся в pdf;
 % последний параметр обеспечивает нумерацию в пределах главы не меняется
+
+
+% Настройка tcolorbox для нумерации частей при переносе
+\tcbset{
+    skin=enhanced,
+    breakable,
+    title after break={\tcbtitletext\ (продолжение)}
+}

@@ -1,0 +1,1205 @@
+\chapter{Листинги исходного кода программы}\label{appendix-code}
+
+В данном приложении представлены полные листинги исходного кода программы топологической сортировки графов, описанной в главе~\ref{ch6}.
+
+\section{Модель данных}
+
+\subsection{Класс Graph}\label{app:graph-code}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Класс Graph — представление ориентированного графа},
+    fontupper=\ttfamily\small,
+    breakable
+]
+    \begin{verbatim}
+package model;
+
+import java.util.*;
+
+/**
+ * Представление ориентированного графа
+ * с использованием списка смежности.
+ * Поддерживает произвольные строковые идентификаторы вершин.
+ */
+public class Graph {
+    private final Set<String> vertices;
+    private final Map<String, List<String>> adjacencyList;
+
+    public Graph() {
+        this.vertices = new LinkedHashSet<>();
+        this.adjacencyList = new HashMap<>();
+    }
+
+    /**
+     * Создаёт граф из списка вершин и рёбер.
+     *
+     * @param vertices список вершин
+     * @param edges    список рёбер в формате [from, to]
+     * @throws IllegalArgumentException если ребро ссылается
+     *         на несуществующую вершину
+     */
+    public Graph(List<String> vertices, List<List<String>> edges) {
+        this();
+
+        if (vertices != null) {
+            for (String vertex : vertices) {
+                addVertex(vertex);
+            }
+        }
+
+        if (edges != null) {
+            for (List<String> edge : edges) {
+                if (edge == null || edge.size() != 2) {
+                    throw new IllegalArgumentException(
+                        "Каждое ребро должно содержать ровно 2 вершины");
+                }
+                addEdge(edge.get(0), edge.get(1));
+            }
+        }
+    }
+
+    /**
+     * Добавляет вершину в граф.
+     */
+    public void addVertex(String vertex) {
+        validateVertex(vertex);
+        vertices.add(vertex);
+        adjacencyList.putIfAbsent(vertex, new ArrayList<>());
+    }
+
+    /**
+     * Добавляет направленное ребро от from к to.
+     */
+    public void addEdge(String from, String to) {
+        validateVertex(from);
+        validateVertex(to);
+
+        if (!vertices.contains(from)) {
+            throw new IllegalArgumentException(
+                "Вершина '" + from + "' не существует в графе");
+        }
+        if (!vertices.contains(to)) {
+            throw new IllegalArgumentException(
+                "Вершина '" + to + "' не существует в графе");
+        }
+
+        adjacencyList.get(from).add(to);
+    }
+    /**
+     * Возвращает соседей (исходящие рёбра) для вершины.
+     */
+    public List<String> getNeighbors(String vertex) {
+        return adjacencyList.getOrDefault(
+            vertex, Collections.emptyList());
+    }
+    /**
+     * Возвращает все вершины графа.
+     */
+    public Set<String> getVertices() {
+        return Collections.unmodifiableSet(vertices);
+    }
+    public int getVertexCount() {
+        return vertices.size();
+    }
+
+    public int getEdgeCount() {
+        return adjacencyList.values().stream()
+                .mapToInt(List::size)
+                .sum();
+    }
+
+    public boolean isEmpty() {
+        return vertices.isEmpty();
+    }
+
+    /**
+     * Вычисляет входящую степень для каждой вершины.
+     * Используется в алгоритме Кана.
+     */
+    public Map<String, Integer> calculateInDegrees() {
+        Map<String, Integer> inDegree = new HashMap<>();
+
+        for (String vertex : vertices) {
+            inDegree.put(vertex, 0);
+        }
+
+        for (String vertex : vertices) {
+            for (String neighbor : getNeighbors(vertex)) {
+                inDegree.merge(neighbor, 1, Integer::sum);
+            }
+        }
+
+        return inDegree;
+    }
+
+    public boolean containsVertex(String vertex) {
+        return vertices.contains(vertex);
+    }
+
+    private void validateVertex(String vertex) {
+        if (vertex == null || vertex.trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                "Идентификатор вершины не может быть null или пустым");
+        }
+    }
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Graph {\n");
+        sb.append("  vertices: ").append(vertices).append("\n");
+        sb.append("  edges: {\n");
+        for (String vertex : vertices) {
+            List<String> neighbors = getNeighbors(vertex);
+            if (!neighbors.isEmpty()) {
+                sb.append("    ").append(vertex)
+                  .append(" -> ").append(neighbors).append("\n");
+            }
+        }
+        sb.append("  }\n}");
+        return sb.toString();
+    }
+}
+    \end{verbatim}
+\end{tcolorbox}
+
+\subsection{Класс SortResult}\label{app:sortresult-code}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Класс SortResult — результат топологической сортировки},
+    fontupper=\ttfamily\small,
+    breakable
+]
+    \begin{verbatim}
+package model;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+
+/**
+ * Результат топологической сортировки.
+ * Содержит либо отсортированный список вершин,
+ * либо информацию об ошибке (цикл).
+ */
+public class SortResult {
+
+    private final boolean success;
+    private final List<String> sortedVertices;
+    private final String errorMessage;
+    private final String algorithmUsed;
+    private final double executionTimeMs;
+
+    private SortResult(boolean success, List<String> sortedVertices,
+                       String errorMessage, String algorithmUsed,
+                       double executionTimeMs) {
+        this.success = success;
+        this.sortedVertices = sortedVertices != null
+                ? Collections.unmodifiableList(sortedVertices)
+                : Collections.emptyList();
+        this.errorMessage = errorMessage;
+        this.algorithmUsed = algorithmUsed;
+        this.executionTimeMs = executionTimeMs;
+    }
+
+    /**
+     * Создаёт успешный результат.
+     */
+    public static SortResult success(List<String> sortedVertices,
+                                     String algorithmUsed,
+                                     double executionTimeMs) {
+        Objects.requireNonNull(sortedVertices,
+            "sortedVertices не может быть null");
+        return new SortResult(true, sortedVertices, null,
+            algorithmUsed, executionTimeMs);
+    }
+
+    /**
+     * Создаёт результат с ошибкой (обнаружен цикл).
+     */
+    public static SortResult failure(String errorMessage,
+                                     String algorithmUsed,
+                                     double executionTimeMs) {
+        Objects.requireNonNull(errorMessage,
+            "errorMessage не может быть null");
+        return new SortResult(false, null, errorMessage,
+            algorithmUsed, executionTimeMs);
+    }
+
+    public boolean isSuccess() { return success; }
+
+    public List<String> getSortedVertices() {
+        return sortedVertices;
+    }
+
+    public String getErrorMessage() { return errorMessage; }
+
+    public String getAlgorithmUsed() { return algorithmUsed; }
+
+    public double getExecutionTimeMs() { return executionTimeMs; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        SortResult that = (SortResult) o;
+        return success == that.success &&
+                Objects.equals(sortedVertices, that.sortedVertices) &&
+                Objects.equals(errorMessage, that.errorMessage);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(success, sortedVertices, errorMessage);
+    }
+}
+    \end{verbatim}
+\end{tcolorbox}
+
+\subsection{Класс ComparisonResult}\label{app:comparison-code}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Класс ComparisonResult — результат сравнения алгоритмов},
+    fontupper=\ttfamily\small,
+    breakable
+]
+    \begin{verbatim}
+package model;
+
+import java.util.Objects;
+
+/**
+ * Результат сравнения двух алгоритмов топологической сортировки.
+ */
+public class ComparisonResult {
+
+    private final SortResult dfsResult;
+    private final SortResult kahnResult;
+    private final int vertexCount;
+    private final int edgeCount;
+    private final boolean dfsValid;
+    private final boolean kahnValid;
+    private final boolean identicalOrder;
+    private final String recommendation;
+
+    private ComparisonResult(Builder builder) {
+        this.dfsResult = builder.dfsResult;
+        this.kahnResult = builder.kahnResult;
+        this.vertexCount = builder.vertexCount;
+        this.edgeCount = builder.edgeCount;
+        this.dfsValid = builder.dfsValid;
+        this.kahnValid = builder.kahnValid;
+        this.identicalOrder = builder.identicalOrder;
+        this.recommendation = builder.recommendation;
+    }
+
+    public static Builder builder() { return new Builder(); }
+
+    // Геттеры
+    public SortResult getDfsResult() { return dfsResult; }
+    public SortResult getKahnResult() { return kahnResult; }
+    public int getVertexCount() { return vertexCount; }
+    public int getEdgeCount() { return edgeCount; }
+    public boolean isDfsValid() { return dfsValid; }
+    public boolean isKahnValid() { return kahnValid; }
+    public boolean isBothValid() { return dfsValid && kahnValid; }
+    public boolean isBothSuccess() {
+        return dfsResult.isSuccess() && kahnResult.isSuccess();
+    }
+    public boolean isIdenticalOrder() { return identicalOrder; }
+    public String getRecommendation() { return recommendation; }
+
+    public double getTimeDifferenceMs() {
+        return dfsResult.getExecutionTimeMs() -
+               kahnResult.getExecutionTimeMs();
+    }
+
+    public String getFasterAlgorithm() {
+        double dfs = dfsResult.getExecutionTimeMs();
+        double kahn = kahnResult.getExecutionTimeMs();
+        if (dfs < kahn) return "DFS";
+        if (kahn < dfs) return "Kahn";
+        return "Одинаково";
+    }
+
+    /**
+     * Builder для создания ComparisonResult.
+     */
+    public static class Builder {
+        private SortResult dfsResult;
+        private SortResult kahnResult;
+        private int vertexCount;
+        private int edgeCount;
+        private boolean dfsValid;
+        private boolean kahnValid;
+        private boolean identicalOrder;
+        private String recommendation;
+
+        public Builder dfsResult(SortResult r) {
+            this.dfsResult = r; return this;
+        }
+        public Builder kahnResult(SortResult r) {
+            this.kahnResult = r; return this;
+        }
+        public Builder vertexCount(int c) {
+            this.vertexCount = c; return this;
+        }
+        public Builder edgeCount(int c) {
+            this.edgeCount = c; return this;
+        }
+        public Builder dfsValid(boolean v) {
+            this.dfsValid = v; return this;
+        }
+        public Builder kahnValid(boolean v) {
+            this.kahnValid = v; return this;
+        }
+        public Builder identicalOrder(boolean i) {
+            this.identicalOrder = i; return this;
+        }
+        public Builder recommendation(String r) {
+            this.recommendation = r; return this;
+        }
+
+        public ComparisonResult build() {
+            Objects.requireNonNull(dfsResult);
+            Objects.requireNonNull(kahnResult);
+            return new ComparisonResult(this);
+        }
+    }
+}
+    \end{verbatim}
+\end{tcolorbox}
+
+\section{Алгоритмы сортировки}
+
+\subsection{Интерфейс TopologicalSortAlgorithm}\label{app:interface-code}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Интерфейс TopologicalSortAlgorithm},
+    fontupper=\ttfamily\small,
+    breakable
+]
+    \begin{verbatim}
+package algorithm;
+
+import model.Graph;
+import model.SortResult;
+
+/**
+ * Интерфейс для алгоритмов топологической сортировки.
+ */
+public interface TopologicalSortAlgorithm {
+
+    /**
+     * Выполняет топологическую сортировку графа.
+     *
+     * @param graph ориентированный граф
+     * @return результат сортировки (успех или ошибка при наличии цикла)
+     * @throws IllegalArgumentException если граф null
+     */
+    SortResult sort(Graph graph);
+
+    /**
+     * Возвращает название алгоритма.
+     */
+    String getName();
+}
+    \end{verbatim}
+\end{tcolorbox}
+
+\subsection{Класс DfsTopologicalSort}\label{app:dfs-code}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Класс DfsTopologicalSort — алгоритм на основе DFS},
+    fontupper=\ttfamily\small,
+    breakable
+]
+    \begin{verbatim}
+package algorithm;
+
+import model.Graph;
+import model.SortResult;
+import java.util.*;
+
+/**
+ * Топологическая сортировка на основе поиска в глубину (DFS).
+ * Сложность: O(V + E) по времени и памяти
+ */
+public class DfsTopologicalSort implements TopologicalSortAlgorithm {
+
+    private static final String ALGORITHM_NAME = "DFS";
+
+    @Override
+    public SortResult sort(Graph graph) {
+        if (graph == null) {
+            throw new IllegalArgumentException(
+                "Граф не может быть null");
+        }
+
+        long startTime = System.nanoTime();
+
+        // Граничный случай: пустой граф
+        if (graph.isEmpty()) {
+            return SortResult.success(
+                Collections.emptyList(),
+                ALGORITHM_NAME,
+                (System.nanoTime() - startTime) / 1_000_000.0
+            );
+        }
+
+        Map<String, Color> color = new HashMap<>();
+        Deque<String> stack = new ArrayDeque<>();
+
+        // Инициализация: все вершины белые
+        for (String vertex : graph.getVertices()) {
+            color.put(vertex, Color.WHITE);
+        }
+
+        // Запускаем DFS для каждой непосещённой вершины
+        for (String vertex : graph.getVertices()) {
+            if (color.get(vertex) == Color.WHITE) {
+                String cycleVertex = dfs(graph, vertex, color, stack);
+                if (cycleVertex != null) {
+                    return SortResult.failure(
+                        "Обнаружен цикл, включающий вершину: "
+                            + cycleVertex,
+                        ALGORITHM_NAME,
+                        (System.nanoTime() - startTime) / 1_000_000.0
+                    );
+                }
+            }
+        }
+
+        List<String> result = new ArrayList<>(stack);
+
+        return SortResult.success(
+            result,
+            ALGORITHM_NAME,
+            (System.nanoTime() - startTime) / 1_000_000.0
+        );
+    }
+
+    /**
+     * Рекурсивный DFS с детектированием циклов.
+     */
+    private String dfs(Graph graph, String vertex,
+                       Map<String, Color> color,
+                       Deque<String> stack) {
+
+        color.put(vertex, Color.GRAY);
+
+        for (String neighbor : graph.getNeighbors(vertex)) {
+            Color neighborColor = color.get(neighbor);
+
+            if (neighborColor == Color.GRAY) {
+                // Найден цикл: сосед ещё в обработке
+                return neighbor;
+            }
+
+            if (neighborColor == Color.WHITE) {
+                String cycleVertex = dfs(graph, neighbor, color, stack);
+                if (cycleVertex != null) {
+                    return cycleVertex;
+                }
+            }
+        }
+
+        color.put(vertex, Color.BLACK);
+        stack.push(vertex);
+
+        return null;
+    }
+
+    @Override
+    public String getName() { return ALGORITHM_NAME; }
+
+    private enum Color { WHITE, GRAY, BLACK }
+}
+    \end{verbatim}
+\end{tcolorbox}
+
+\subsection{Класс KahnTopologicalSort}\label{app:kahn-code}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Класс KahnTopologicalSort — алгоритм Кана},
+    fontupper=\ttfamily\small,
+    breakable
+]
+    \begin{verbatim}
+package algorithm;
+
+import model.Graph;
+import model.SortResult;
+import java.util.*;
+
+/**
+ * Топологическая сортировка по алгоритму Кана (BFS с очередью).
+ * Сложность: O(V + E) по времени и памяти
+ */
+public class KahnTopologicalSort implements TopologicalSortAlgorithm {
+
+    private static final String ALGORITHM_NAME = "Kahn";
+
+    @Override
+    public SortResult sort(Graph graph) {
+        if (graph == null) {
+            throw new IllegalArgumentException(
+                "Граф не может быть null");
+        }
+
+        long startTime = System.nanoTime();
+
+        if (graph.isEmpty()) {
+            return SortResult.success(
+                Collections.emptyList(),
+                ALGORITHM_NAME,
+                (System.nanoTime() - startTime) / 1_000_000.0
+            );
+        }
+
+        // Вычисляем входящие степени
+        Map<String, Integer> inDegree = graph.calculateInDegrees();
+
+        // Очередь вершин с нулевой входящей степенью
+        Queue<String> queue = new LinkedList<>();
+        for (String vertex : graph.getVertices()) {
+            if (inDegree.get(vertex) == 0) {
+                queue.offer(vertex);
+            }
+        }
+
+        List<String> result = new ArrayList<>();
+
+        while (!queue.isEmpty()) {
+            String vertex = queue.poll();
+            result.add(vertex);
+
+            // Уменьшаем in-degree для всех соседей
+            for (String neighbor : graph.getNeighbors(vertex)) {
+                int newDegree = inDegree.get(neighbor) - 1;
+                inDegree.put(neighbor, newDegree);
+
+                if (newDegree == 0) {
+                    queue.offer(neighbor);
+                }
+            }
+        }
+
+        // Проверка на цикл
+        if (result.size() != graph.getVertexCount()) {
+            List<String> cycleVertices = new ArrayList<>();
+            for (String vertex : graph.getVertices()) {
+                if (!result.contains(vertex)) {
+                    cycleVertices.add(vertex);
+                }
+            }
+
+            return SortResult.failure(
+                "Обнаружен цикл. Вершины в цикле: " + cycleVertices,
+                ALGORITHM_NAME,
+                (System.nanoTime() - startTime) / 1_000_000.0
+            );
+        }
+
+        return SortResult.success(
+            result,
+            ALGORITHM_NAME,
+            (System.nanoTime() - startTime) / 1_000_000.0
+        );
+    }
+
+    @Override
+    public String getName() { return ALGORITHM_NAME; }
+}
+    \end{verbatim}
+\end{tcolorbox}
+
+\section{Подсистема ввода-вывода}
+
+\subsection{Класс JsonGraphHandler}\label{app:json-code}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Класс JsonGraphHandler — работа с JSON (часть 1)},
+    fontupper=\ttfamily\small,
+    breakable
+]
+    \begin{verbatim}
+package io;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import model.ComparisonResult;
+import model.Graph;
+import model.SortResult;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Обработчик JSON для чтения и записи графов и результатов.
+ */
+public class JsonGraphHandler {
+
+    private final ObjectMapper objectMapper;
+
+    public JsonGraphHandler() {
+        this.objectMapper = new ObjectMapper();
+        this.objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+        this.objectMapper.configure(
+            DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
+
+    /**
+     * Загружает граф из JSON-файла.
+     */
+    public Graph loadFromFile(String filePath)
+            throws GraphLoadException {
+        if (filePath == null || filePath.trim().isEmpty()) {
+            throw new GraphLoadException(
+                "Путь к файлу не может быть пустым");
+        }
+
+        File file = new File(filePath);
+        if (!file.exists()) {
+            throw new GraphLoadException(
+                "Файл не найден: " + filePath);
+        }
+
+        if (!file.canRead()) {
+            throw new GraphLoadException(
+                "Нет доступа для чтения файла: " + filePath);
+        }
+
+        try (InputStream is = new FileInputStream(file)) {
+            return loadFromInputStream(is);
+        } catch (IOException e) {
+            throw new GraphLoadException(
+                "Ошибка чтения файла: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Загружает граф из потока ввода.
+     */
+    public Graph loadFromInputStream(InputStream inputStream)
+            throws GraphLoadException {
+        try {
+            GraphJson graphJson = objectMapper.readValue(
+                inputStream, GraphJson.class);
+            return convertToGraph(graphJson);
+        } catch (IOException e) {
+            throw new GraphLoadException(
+                "Некорректный JSON формат: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Загружает граф из JSON-строки.
+     */
+    public Graph loadFromString(String json)
+            throws GraphLoadException {
+        if (json == null || json.trim().isEmpty()) {
+            throw new GraphLoadException(
+                "JSON строка не может быть пустой");
+        }
+
+        try {
+            GraphJson graphJson = objectMapper.readValue(
+                json, GraphJson.class);
+            return convertToGraph(graphJson);
+        } catch (IOException e) {
+            throw new GraphLoadException(
+                "Некорректный JSON формат: " + e.getMessage(), e);
+        }
+    }
+    \end{verbatim}
+\end{tcolorbox}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Класс JsonGraphHandler — работа с JSON (часть 2)},
+    fontupper=\ttfamily\small,
+    breakable
+]
+    \begin{verbatim}
+    /**
+     * Сохраняет результат сортировки в файл.
+     */
+    public void saveResultToFile(SortResult result, String filePath)
+            throws GraphSaveException {
+        if (filePath == null || filePath.trim().isEmpty()) {
+            throw new GraphSaveException(
+                "Путь к файлу не может быть пустым");
+        }
+
+        ResultJson resultJson = convertToResultJson(result);
+
+        try (Writer writer = new OutputStreamWriter(
+                new FileOutputStream(filePath),
+                StandardCharsets.UTF_8)) {
+            objectMapper.writeValue(writer, resultJson);
+        } catch (IOException e) {
+            throw new GraphSaveException(
+                "Ошибка записи в файл: " + e.getMessage(), e);
+        }
+    }
+
+    private Graph convertToGraph(GraphJson graphJson)
+            throws GraphLoadException {
+        if (graphJson.vertices == null) {
+            graphJson.vertices = new ArrayList<>();
+        }
+        if (graphJson.edges == null) {
+            graphJson.edges = new ArrayList<>();
+        }
+
+        List<List<String>> edgesList = new ArrayList<>();
+        for (EdgeJson edge : graphJson.edges) {
+            if (edge.from != null && edge.to != null) {
+                edgesList.add(List.of(edge.from, edge.to));
+            }
+        }
+
+        try {
+            return new Graph(graphJson.vertices, edgesList);
+        } catch (IllegalArgumentException e) {
+            throw new GraphLoadException(
+                "Ошибка создания графа: " + e.getMessage(), e);
+        }
+    }
+
+    private ResultJson convertToResultJson(SortResult result) {
+        ResultJson json = new ResultJson();
+        json.success = result.isSuccess();
+        json.algorithm = result.getAlgorithmUsed();
+        json.executionTimeMs = result.getExecutionTimeMs();
+
+        if (result.isSuccess()) {
+            json.sorted = result.getSortedVertices();
+        } else {
+            json.error = result.getErrorMessage();
+        }
+
+        return json;
+    }
+
+    // DTO классы для JSON сериализации
+
+    public static class EdgeJson {
+        @JsonProperty("from") public String from;
+        @JsonProperty("to") public String to;
+    }
+
+    public static class GraphJson {
+        @JsonProperty("vertices") public List<String> vertices;
+        @JsonProperty("edges") public List<EdgeJson> edges;
+    }
+
+    public static class ResultJson {
+        @JsonProperty("success") public boolean success;
+        @JsonProperty("algorithm") public String algorithm;
+        @JsonProperty("sorted") public List<String> sorted;
+        @JsonProperty("error") public String error;
+        @JsonProperty("execution_time_ms") public double executionTimeMs;
+    }
+
+    public static class GraphLoadException extends Exception {
+        public GraphLoadException(String message) { super(message); }
+        public GraphLoadException(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
+
+    public static class GraphSaveException extends Exception {
+        public GraphSaveException(String message) { super(message); }
+        public GraphSaveException(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
+}
+    \end{verbatim}
+\end{tcolorbox}
+
+\section{Утилиты валидации}
+
+\subsection{Класс SortValidator}\label{app:validator-code}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Класс SortValidator — валидация результатов},
+    fontupper=\ttfamily\small,
+    breakable
+]
+    \begin{verbatim}
+package util;
+
+import model.ComparisonResult;
+import model.Graph;
+import model.SortResult;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Утилита для валидации результатов топологической сортировки.
+ */
+public class SortValidator {
+
+    /**
+     * Проверяет корректность топологической сортировки.
+     * Для каждого ребра u → v вершина u должна
+     * предшествовать v в результате.
+     */
+    public static boolean isValidTopologicalOrder(
+            Graph graph, SortResult result) {
+        if (!result.isSuccess()) {
+            return false;
+        }
+
+        List<String> sorted = result.getSortedVertices();
+
+        // Проверяем, что все вершины присутствуют
+        if (sorted.size() != graph.getVertexCount()) {
+            return false;
+        }
+
+        Set<String> graphVertices = graph.getVertices();
+        for (String vertex : sorted) {
+            if (!graphVertices.contains(vertex)) {
+                return false;
+            }
+        }
+
+        // Создаём отображение: вершина → позиция
+        Map<String, Integer> position = new HashMap<>();
+        for (int i = 0; i < sorted.size(); i++) {
+            position.put(sorted.get(i), i);
+        }
+
+        // Проверяем все рёбра
+        for (String vertex : graph.getVertices()) {
+            int vertexPos = position.get(vertex);
+            for (String neighbor : graph.getNeighbors(vertex)) {
+                int neighborPos = position.get(neighbor);
+                if (vertexPos >= neighborPos) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Сравнивает результаты двух алгоритмов.
+     */
+    public static ComparisonResult compareAlgorithms(
+            Graph graph,
+            SortResult dfsResult,
+            SortResult kahnResult) {
+
+        boolean dfsValid = isValidTopologicalOrder(graph, dfsResult);
+        boolean kahnValid = isValidTopologicalOrder(graph, kahnResult);
+
+        boolean identicalOrder = dfsResult.isSuccess() &&
+            kahnResult.isSuccess() &&
+            dfsResult.getSortedVertices().equals(
+                kahnResult.getSortedVertices());
+
+        String recommendation = generateRecommendation(
+            graph, dfsResult, kahnResult, dfsValid, kahnValid);
+
+        return ComparisonResult.builder()
+                .dfsResult(dfsResult)
+                .kahnResult(kahnResult)
+                .vertexCount(graph.getVertexCount())
+                .edgeCount(graph.getEdgeCount())
+                .dfsValid(dfsValid)
+                .kahnValid(kahnValid)
+                .identicalOrder(identicalOrder)
+                .recommendation(recommendation)
+                .build();
+    }
+
+    private static String generateRecommendation(
+            Graph graph,
+            SortResult dfsResult,
+            SortResult kahnResult,
+            boolean dfsValid,
+            boolean kahnValid) {
+
+        StringBuilder rec = new StringBuilder();
+
+        if (dfsResult.isSuccess() && kahnResult.isSuccess()) {
+            if (dfsValid && kahnValid) {
+                if (graph.getVertexCount() > 100) {
+                    rec.append("Для больших графов рекомендуется ")
+                       .append("алгоритм Кана. ");
+                }
+                rec.append("Оба результата валидны.");
+            } else {
+                rec.append("ВНИМАНИЕ: Невалидный результат!");
+            }
+        } else if (!dfsResult.isSuccess() &&
+                   !kahnResult.isSuccess()) {
+            rec.append("Граф содержит цикл.");
+        } else {
+            rec.append("ОШИБКА: Противоречивые результаты!");
+        }
+
+        return rec.toString();
+    }
+}
+    \end{verbatim}
+\end{tcolorbox}
+
+\section{Консольное приложение}
+
+\subsection{Класс Application}\label{app:application-code}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Класс Application — главное приложение (часть 1)},
+    fontupper=\ttfamily\small,
+    breakable
+]
+    \begin{verbatim}
+import algorithm.DfsTopologicalSort;
+import algorithm.KahnTopologicalSort;
+import algorithm.TopologicalSortAlgorithm;
+import io.JsonGraphHandler;
+import io.JsonGraphHandler.GraphLoadException;
+import io.JsonGraphHandler.GraphSaveException;
+import model.ComparisonResult;
+import model.Graph;
+import model.SortResult;
+import util.SortValidator;
+
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+/**
+ * Главное консольное приложение для топологической
+ * сортировки графов.
+ */
+public class Application {
+
+    private final Scanner scanner;
+    private final PrintStream out;
+    private final JsonGraphHandler jsonHandler;
+    private final TopologicalSortAlgorithm dfsAlgorithm;
+    private final TopologicalSortAlgorithm kahnAlgorithm;
+
+    private Graph currentGraph;
+    private SortResult lastResult;
+    private ComparisonResult lastComparison;
+
+    public Application() {
+        this(System.in, System.out);
+    }
+
+    public Application(InputStream in, PrintStream out) {
+        this.scanner = new Scanner(in);
+        this.out = out;
+        this.jsonHandler = new JsonGraphHandler();
+        this.dfsAlgorithm = new DfsTopologicalSort();
+        this.kahnAlgorithm = new KahnTopologicalSort();
+    }
+
+    public static void main(String[] args) {
+        Application app = new Application();
+        app.run();
+    }
+
+    /**
+     * Запускает главный цикл приложения.
+     */
+    public void run() {
+        printWelcome();
+
+        boolean running = true;
+        while (running) {
+            printMenu();
+            String choice = scanner.nextLine().trim();
+
+            switch (choice) {
+                case "1" -> showHelp();
+                case "2" -> inputGraphManually();
+                case "3" -> loadGraphFromFile();
+                case "4" -> selectAndRunAlgorithm();
+                case "5" -> runBothAlgorithms();
+                case "6" -> saveResultToFile();
+                case "7" -> saveComparisonToFile();
+                case "8" -> showCurrentGraph();
+                case "0" -> {
+                    out.println("\nДо свидания!");
+                    running = false;
+                }
+                default -> out.println("Неверный выбор.");
+            }
+        }
+    }
+    \end{verbatim}
+\end{tcolorbox}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Класс Application — главное приложение (часть 2)},
+    fontupper=\ttfamily\small,
+    breakable
+]
+    \begin{verbatim}
+    private void inputGraphManually() {
+        out.println("\n=== ВВОД ГРАФА ВРУЧНУЮ ===\n");
+        out.println("Введите вершины через запятую:");
+        String verticesInput = scanner.nextLine().trim();
+
+        if (verticesInput.isEmpty()) {
+            out.println("Ошибка: не указаны вершины.");
+            return;
+        }
+
+        List<String> vertices = new ArrayList<>();
+        for (String v : verticesInput.split(",")) {
+            String trimmed = v.trim();
+            if (!trimmed.isEmpty()) {
+                vertices.add(trimmed);
+            }
+        }
+
+        out.println("Введите рёбра (формат: A -> B):");
+        out.println("Пустая строка для завершения:");
+
+        List<List<String>> edges = new ArrayList<>();
+        while (true) {
+            String edgeInput = scanner.nextLine().trim();
+            if (edgeInput.isEmpty()) break;
+
+            String[] parts = edgeInput.split("->");
+            if (parts.length != 2) {
+                out.println("  Неверный формат.");
+                continue;
+            }
+
+            String from = parts[0].trim();
+            String to = parts[1].trim();
+
+            if (!vertices.contains(from) ||
+                !vertices.contains(to)) {
+                out.println("  Ошибка: вершина не существует.");
+                continue;
+            }
+
+            edges.add(List.of(from, to));
+            out.println("  Добавлено: " + from + " -> " + to);
+        }
+
+        try {
+            currentGraph = new Graph(vertices, edges);
+            lastResult = null;
+            lastComparison = null;
+            out.println("\nГраф успешно создан!");
+            out.println("  Вершин: " + currentGraph.getVertexCount());
+            out.println("  Рёбер: " + currentGraph.getEdgeCount());
+        } catch (IllegalArgumentException e) {
+            out.println("Ошибка создания графа: " + e.getMessage());
+        }
+    }
+
+    private void loadGraphFromFile() {
+        out.print("Введите путь к JSON-файлу: ");
+        String filePath = scanner.nextLine().trim();
+
+        try {
+            currentGraph = jsonHandler.loadFromFile(filePath);
+            lastResult = null;
+            lastComparison = null;
+            out.println("\nГраф успешно загружен!");
+        } catch (GraphLoadException e) {
+            out.println("Ошибка загрузки: " + e.getMessage());
+        }
+    }
+
+    private void runBothAlgorithms() {
+        if (currentGraph == null) {
+            out.println("\nСначала загрузите граф.");
+            return;
+        }
+
+        out.println("\nВыполняется DFS...");
+        SortResult dfsResult = dfsAlgorithm.sort(currentGraph);
+
+        out.println("Выполняется Kahn...");
+        SortResult kahnResult = kahnAlgorithm.sort(currentGraph);
+
+        lastComparison = SortValidator.compareAlgorithms(
+            currentGraph, dfsResult, kahnResult);
+        lastResult = dfsResult;
+
+        out.println("\n" + lastComparison);
+    }
+}
+    \end{verbatim}
+\end{tcolorbox}
+
+\section{Сводная таблица классов}
+
+В таблице~\ref{tab:code_summary} представлена сводная информация о реализованных классах.
+
+\begin{table}[H]
+    \centering
+    \caption{Сводная таблица классов приложения}
+    \label{tab:code_summary}
+    \small
+    \begin{tabular}{|l|l|c|c|}
+        \hline
+        \textbf{Класс} & \textbf{Пакет} & \textbf{Строк кода} & \textbf{Методов} \\
+        \hline
+        Graph & model & 120 & 12 \\
+        \hline
+        SortResult & model & 70 & 8 \\
+        \hline
+        ComparisonResult & model & 150 & 15 \\
+        \hline
+        TopologicalSortAlgorithm & algorithm & 15 & 2 \\
+        \hline
+        DfsTopologicalSort & algorithm & 80 & 3 \\
+        \hline
+        KahnTopologicalSort & algorithm & 70 & 2 \\
+        \hline
+        JsonGraphHandler & io & 180 & 8 \\
+        \hline
+        SortValidator & util & 90 & 3 \\
+        \hline
+        Application & (root) & 250 & 12 \\
+        \hline
+        \textbf{Итого} & & \textbf{$\sim$1025} & \textbf{65} \\
+        \hline
+    \end{tabular}
+\end{table}

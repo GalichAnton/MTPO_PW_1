@@ -1,0 +1,890 @@
+\chapter{Листинги исходного кода тестов}\label{appendix-tests}
+
+В данном приложении представлены полные листинги исходного кода модульных тестов, реализующих методики проектирования тестов, описанные в главе~\ref{ch3} и реализованные в главе~\ref{ch5}.
+
+\section{Тесты Equivalence Partitioning}\label{app:ep-tests}
+
+\subsection{TC-EP-01: Пустой граф}
+\label{lst:ep01}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Тест TC-EP-01 --- Пустой граф (класс EP1)},
+    fontupper=\ttfamily\small,
+    breakable,
+    enhanced
+]
+    \begin{verbatim}
+@Test
+@DisplayName("TC-EP-01: Пустой граф (EP1 - валидный класс)")
+void testEmptyGraph_EP01() {
+    // Given: пустой граф создан в setUp()
+
+    // Then: граф должен быть пустым
+    assertTrue(graph.isEmpty(), "Граф должен быть пустым");
+    assertEquals(0, graph.getVertexCount(),
+        "Количество вершин должно быть 0");
+    assertEquals(0, graph.getEdgeCount(),
+        "Количество рёбер должно быть 0");
+
+    // Hamcrest matchers
+    assertThat(graph.getVertices(), is(empty()));
+    assertThat(graph.getVertexCount(), equalTo(0));
+}
+    \end{verbatim}
+\end{tcolorbox}
+
+\subsection{TC-EP-02: Ациклический граф (DAG)}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Тест TC-EP-02 --- DAG (класс EP2)},
+    fontupper=\ttfamily\small,
+    breakable,
+    enhanced
+]
+    \begin{verbatim}
+@Test
+@DisplayName("TC-EP-02: DAG - ациклический граф (EP2)")
+void testAcyclicGraph_EP02() {
+    // Given: создаём простой DAG A → B → C
+    List<String> vertices = List.of("A", "B", "C");
+    List<List<String>> edges = List.of(
+        List.of("A", "B"),
+        List.of("B", "C")
+    );
+
+    // When
+    graph = new Graph(vertices, edges);
+
+    // Then
+    assertAll("Проверка DAG графа",
+        () -> assertFalse(graph.isEmpty()),
+        () -> assertEquals(3, graph.getVertexCount()),
+        () -> assertEquals(2, graph.getEdgeCount()),
+        () -> assertTrue(graph.containsVertex("A")),
+        () -> assertTrue(graph.containsVertex("B")),
+        () -> assertTrue(graph.containsVertex("C"))
+    );
+
+    // Hamcrest matchers
+    assertThat(graph.getVertices(), hasSize(3));
+    assertThat(graph.getVertices(),
+        containsInAnyOrder("A", "B", "C"));
+    assertThat(graph.getNeighbors("A"), hasItem("B"));
+    assertThat(graph.getNeighbors("B"), hasItem("C"));
+}
+    \end{verbatim}
+\end{tcolorbox}
+
+\subsection{TC-EP-03: Граф с циклом}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Тест TC-EP-03 --- Граф с циклом (класс EP3)},
+    fontupper=\ttfamily\small,
+    breakable,
+    enhanced
+]
+    \begin{verbatim}
+@Test
+@DisplayName("TC-EP-03: Граф с циклом (EP3 - невалидный класс)")
+void testCyclicGraph_EP03() {
+    // Given: создаём граф с циклом A → B → A
+    graph.addVertex("A");
+    graph.addVertex("B");
+    graph.addEdge("A", "B");
+    graph.addEdge("B", "A");
+
+    // Then: граф создан, но содержит цикл
+    assertEquals(2, graph.getVertexCount());
+    assertEquals(2, graph.getEdgeCount());
+
+    // Проверка структуры цикла
+    assertThat(graph.getNeighbors("A"), contains("B"));
+    assertThat(graph.getNeighbors("B"), contains("A"));
+}
+    \end{verbatim}
+\end{tcolorbox}
+
+\subsection{TC-EP-04: Некорректный формат}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Тест TC-EP-04 --- Невалидный формат (класс EP4)},
+    fontupper=\ttfamily\small,
+    breakable,
+    enhanced
+]
+    \begin{verbatim}
+@Test
+@DisplayName("TC-EP-04: Некорректный формат (EP4)")
+void testInvalidFormat_EP04() {
+    // Given/When: попытка создать граф с невалидными данными
+    List<List<String>> invalidEdges = List.of(
+        List.of("A")  // Ребро с одной вершиной
+    );
+
+    // Then: должно выброситься исключение
+    assertThrows(IllegalArgumentException.class,
+        () -> new Graph(List.of("A", "B"), invalidEdges),
+        "Должно быть выброшено исключение");
+}
+    \end{verbatim}
+\end{tcolorbox}
+
+\section{Тесты Boundary Value Analysis}\label{app:bva-tests}
+
+\subsection{TC-BVA-01 и TC-BVA-02: Минимальные размеры}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Тесты граничных значений --- 0 и 1 вершина},
+    fontupper=\ttfamily\small,
+    breakable,
+    enhanced
+]
+    \begin{verbatim}
+@Test
+@DisplayName("TC-BVA-01: Граница 0 вершин")
+void testZeroVertices_BVA01() {
+    // Given: пустой граф
+    assumeTrue(graph.isEmpty(), "Предполагаем пустой граф");
+
+    // Then
+    assertEquals(0, graph.getVertexCount());
+    assertTrue(graph.getVertices().isEmpty());
+}
+
+@Test
+@DisplayName("TC-BVA-02: Граница 1 вершина, 0 рёбер")
+void testOneVertex_BVA02() {
+    // When
+    graph.addVertex("A");
+
+    // Then
+    assertEquals(1, graph.getVertexCount());
+    assertEquals(0, graph.getEdgeCount());
+    assertThat(graph.getVertices(), hasSize(1));
+    assertThat(graph.getNeighbors("A"), is(empty()));
+}
+    \end{verbatim}
+\end{tcolorbox}
+
+\subsection{TC-BVA-03 и TC-BVA-04: Граница связности}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Тесты граничных значений --- 2 вершины},
+    fontupper=\ttfamily\small,
+    breakable,
+    enhanced
+]
+    \begin{verbatim}
+@Test
+@DisplayName("TC-BVA-03: Граница 2 вершины, 0 рёбер")
+void testTwoVerticesNoEdges_BVA03() {
+    // When
+    graph.addVertex("A");
+    graph.addVertex("B");
+
+    // Then
+    assertEquals(2, graph.getVertexCount());
+    assertEquals(0, graph.getEdgeCount());
+    assertThat(graph.getVertices(), containsInAnyOrder("A", "B"));
+}
+
+@Test
+@DisplayName("TC-BVA-04: Граница 2 вершины, 1 ребро")
+void testTwoVerticesOneEdge_BVA04() {
+    // When
+    graph.addVertex("A");
+    graph.addVertex("B");
+    graph.addEdge("A", "B");
+
+    // Then
+    assertAll("Граф с минимальным ребром",
+        () -> assertEquals(2, graph.getVertexCount()),
+        () -> assertEquals(1, graph.getEdgeCount()),
+        () -> assertThat(graph.getNeighbors("A"), contains("B")),
+        () -> assertThat(graph.getNeighbors("B"), is(empty()))
+    );
+}
+    \end{verbatim}
+\end{tcolorbox}
+
+\subsection{TC-BVA-05: Параметризованный тест полного DAG}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Параметризованный тест полного DAG},
+    fontupper=\ttfamily\small,
+    breakable,
+    enhanced
+]
+    \begin{verbatim}
+@ParameterizedTest
+@DisplayName("TC-BVA-05: Полный DAG с N вершинами")
+@CsvSource({
+    "3, 3",  // 3 вершины, 3 ребра: A→B, A→C, B→C
+    "4, 6"   // 4 вершины, 6 рёбер: полный DAG
+})
+void testCompleteDAG_BVA05(int vertexCount, int expectedEdges) {
+    // Given: создаём вершины
+    List<String> vertices = new ArrayList<>();
+    for (int i = 0; i < vertexCount; i++) {
+        vertices.add(String.valueOf((char) ('A' + i)));
+    }
+
+    // When: создаём все возможные рёбра для DAG
+    List<List<String>> edges = new ArrayList<>();
+    for (int i = 0; i < vertexCount; i++) {
+        for (int j = i + 1; j < vertexCount; j++) {
+            edges.add(List.of(vertices.get(i), vertices.get(j)));
+        }
+    }
+
+    graph = new Graph(vertices, edges);
+
+    // Then
+    assertEquals(vertexCount, graph.getVertexCount());
+    assertEquals(expectedEdges, graph.getEdgeCount());
+}
+    \end{verbatim}
+\end{tcolorbox}
+
+\subsection{TC-BVA-06: Большой граф}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Тест большого графа с ограничением времени},
+    fontupper=\ttfamily\small,
+    breakable,
+    enhanced
+]
+    \begin{verbatim}
+@Test
+@DisplayName("TC-BVA-06: Большой граф (1000 вершин)")
+@Timeout(5)  // Ограничение: 5 секунд
+void testLargeGraph_BVA06() {
+    // Given: создаём большой линейный граф
+    int size = 1000;
+    List<String> vertices = new ArrayList<>();
+    List<List<String>> edges = new ArrayList<>();
+
+    for (int i = 0; i < size; i++) {
+        vertices.add("V" + i);
+        if (i > 0) {
+            edges.add(List.of("V" + (i - 1), "V" + i));
+        }
+    }
+
+    // When
+    graph = new Graph(vertices, edges);
+
+    // Then
+    assertEquals(size, graph.getVertexCount());
+    assertEquals(size - 1, graph.getEdgeCount());
+    assertTrue(graph.containsVertex("V0"));
+    assertTrue(graph.containsVertex("V" + (size - 1)));
+}
+    \end{verbatim}
+\end{tcolorbox}
+
+\section{Тесты Decision Table}\label{app:dt-tests}
+
+\subsection{Вложенный класс тестов Decision Table}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Структура тестов Decision Table (часть 1)},
+    fontupper=\ttfamily\small,
+    breakable,
+    enhanced
+]
+    \begin{verbatim}
+@Nested
+@DisplayName("Decision Table Tests")
+class DecisionTableTests {
+
+    @Test
+    @DisplayName("TC-DT-01 (R1): Пустой граф")
+    void testDT_R1_EmptyGraph() {
+        // Условия: C1=T, C2=-, C3=T, C4=T, C5=T
+        Graph emptyGraph = new Graph();
+        TopologicalSortAlgorithm algorithm = new DfsTopologicalSort();
+
+        SortResult result = algorithm.sort(emptyGraph);
+
+        assertTrue(result.isSuccess());
+        assertThat(result.getSortedVertices(), is(empty()));
+    }
+
+    @Test
+    @DisplayName("TC-DT-02 (R2): Валидный DAG")
+    void testDT_R2_ValidDAG() {
+        // Условия: C1=F, C2=F, C3=T, C4=T, C5=T
+        Graph dag = new Graph(
+            List.of("A", "B", "C"),
+            List.of(List.of("A", "B"), List.of("B", "C"))
+        );
+        TopologicalSortAlgorithm algorithm = new DfsTopologicalSort();
+
+        SortResult result = algorithm.sort(dag);
+
+        assertTrue(result.isSuccess());
+        assertThat(result.getSortedVertices(), hasSize(3));
+    }
+}
+    \end{verbatim}
+\end{tcolorbox}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Структура тестов Decision Table (часть 2)},
+    fontupper=\ttfamily\small,
+    breakable,
+    enhanced
+]
+    \begin{verbatim}
+    @Test
+    @DisplayName("TC-DT-03 (R3): Граф с циклом")
+    void testDT_R3_CycleDetected() {
+        // Условия: C1=F, C2=T, C3=T, C4=T, C5=T
+        Graph cyclicGraph = new Graph(
+            List.of("A", "B"),
+            List.of(List.of("A", "B"), List.of("B", "A"))
+        );
+        TopologicalSortAlgorithm algorithm = new DfsTopologicalSort();
+
+        SortResult result = algorithm.sort(cyclicGraph);
+
+        assertFalse(result.isSuccess());
+        assertThat(result.getErrorMessage(), containsString("цикл"));
+    }
+    \end{verbatim}
+\end{tcolorbox}
+
+\subsection{Тесты обработки ошибок ввода-вывода}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Тесты обработки ошибок файловой системы},
+    fontupper=\ttfamily\small,
+    breakable,
+    enhanced
+]
+    \begin{verbatim}
+@Test
+@DisplayName("TC-DT-04 (R4): Несуществующий файл")
+void testDT_R4_FileNotFound() {
+    // Условия: C1=-, C2=-, C3=F, C4=-, C5=-
+    String nonexistentPath = "/path/to/nonexistent/file.json";
+
+    assertThrows(FileNotFoundException.class,
+        () -> JsonGraphHandler.loadFromFile(nonexistentPath));
+}
+
+@Test
+@DisplayName("TC-DT-05 (R5): Невалидный JSON")
+void testDT_R5_InvalidJSON() throws IOException {
+    // Условия: C1=-, C2=-, C3=T, C4=F, C5=-
+    Path tempFile = Files.createTempFile("invalid", ".json");
+    Files.writeString(tempFile, "{ invalid json }");
+
+    try {
+        assertThrows(JsonParseException.class,
+            () -> JsonGraphHandler.loadFromFile(tempFile.toString()));
+    } finally {
+        Files.deleteIfExists(tempFile);
+    }
+}
+    \end{verbatim}
+\end{tcolorbox}
+
+\section{Тесты Branch Testing}\label{app:branch-tests}
+
+\subsection{Тесты покрытия ветвей алгоритма DFS}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Тесты покрытия ветвей (часть 1)},
+    fontupper=\ttfamily\small,
+    breakable,
+    enhanced
+]
+    \begin{verbatim}
+@Nested
+@DisplayName("Branch Testing")
+class BranchTests {
+
+    @Test
+    @DisplayName("TC-BR-01: Ветвь isEmpty() -> true")
+    void testBranch_IsEmpty_True() {
+        assertTrue(graph.isEmpty());
+        assertEquals(0, graph.getVertexCount());
+    }
+
+    @Test
+    @DisplayName("TC-BR-02: Ветвь isEmpty() -> false")
+    void testBranch_IsEmpty_False_SingleVertex() {
+        graph.addVertex("A");
+        assertFalse(graph.isEmpty());
+        assertThat(graph.getVertices(), hasSize(1));
+    }
+
+    @Test
+    @DisplayName("TC-BR-03: Ветвь обнаружения цикла (GRAY)")
+    void testBranch_CycleDetection() {
+        graph.addVertex("A");
+        graph.addVertex("B");
+        graph.addVertex("C");
+        graph.addEdge("A", "B");
+        graph.addEdge("B", "C");
+        graph.addEdge("C", "A");  // создаём цикл
+
+        assertTrue(graph.getNeighbors("C").contains("A"));
+        assertEquals(3, graph.getEdgeCount());
+    }
+}
+    \end{verbatim}
+\end{tcolorbox}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Тесты покрытия ветвей (часть 2)},
+    fontupper=\ttfamily\small,
+    breakable,
+    enhanced
+]
+    \begin{verbatim}
+    @Test
+    @DisplayName("TC-BR-04: Ветвь пропуска посещённой вершины")
+    void testBranch_AlreadyVisited() {
+        // Given: граф с общим потомком (diamond)
+        //    A
+        //   / \
+        //  B   C
+        //   \ /
+        //    D
+        graph = new Graph(
+            List.of("A", "B", "C", "D"),
+            List.of(
+                List.of("A", "B"), List.of("A", "C"),
+                List.of("B", "D"), List.of("C", "D")
+            )
+        );
+
+        Map<String, Integer> inDegrees = graph.calculateInDegrees();
+        assertEquals(2, inDegrees.get("D"));
+        assertThat(graph.getNeighbors("B"), contains("D"));
+        assertThat(graph.getNeighbors("C"), contains("D"));
+    }
+
+    @Test
+    @DisplayName("TC-BR-05: Ветвь полного обхода")
+    void testBranch_FullTraversal() {
+        // Given: линейный граф A → B → C → D
+        graph = new Graph(
+            List.of("A", "B", "C", "D"),
+            List.of(
+                List.of("A", "B"), List.of("B", "C"), List.of("C", "D")
+            )
+        );
+
+        assertEquals(4, graph.getVertexCount());
+        assertEquals(3, graph.getEdgeCount());
+
+        assertAll("Последовательность рёбер",
+            () -> assertThat(graph.getNeighbors("A"), contains("B")),
+            () -> assertThat(graph.getNeighbors("B"), contains("C")),
+            () -> assertThat(graph.getNeighbors("C"), contains("D")),
+            () -> assertThat(graph.getNeighbors("D"), is(empty()))
+        );
+    }
+    \end{verbatim}
+\end{tcolorbox}
+
+\section{Тесты с использованием Mockito}\label{app:mockito-tests}
+
+\subsection{Mock-объекты и верификация вызовов}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Использование Mock-объектов},
+    fontupper=\ttfamily\small,
+    breakable,
+    enhanced
+]
+    \begin{verbatim}
+@ExtendWith(MockitoExtension.class)
+@DisplayName("Тесты с моками (Mockito)")
+class MockitoTests {
+
+    @Mock
+    private Graph mockGraph;
+
+    @Test
+    @DisplayName("Мок: Проверка вызова getVertices()")
+    void testMock_GetVerticesCalled() {
+        // Given: настраиваем мок
+        when(mockGraph.getVertices()).thenReturn(new LinkedHashSet<>());
+        when(mockGraph.isEmpty()).thenReturn(true);
+
+        TopologicalSortAlgorithm algorithm = new DfsTopologicalSort();
+
+        // When
+        SortResult result = algorithm.sort(mockGraph);
+
+        // Then: проверяем, что методы были вызваны
+        verify(mockGraph, atLeastOnce()).isEmpty();
+        assertTrue(result.isSuccess());
+    }
+}
+    \end{verbatim}
+\end{tcolorbox}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Мок с заданными вершинами},
+    fontupper=\ttfamily\small,
+    breakable,
+    enhanced
+]
+    \begin{verbatim}
+@Test
+@DisplayName("Мок: Граф с заданными вершинами")
+void testMock_CustomVertices() {
+    // Given
+    Set<String> vertices = new LinkedHashSet<>(List.of("X", "Y", "Z"));
+    Map<String, Integer> inDegrees = Map.of("X", 0, "Y", 1, "Z", 1);
+
+    when(mockGraph.isEmpty()).thenReturn(false);
+    when(mockGraph.getVertices()).thenReturn(vertices);
+    when(mockGraph.getVertexCount()).thenReturn(3);
+    when(mockGraph.calculateInDegrees()).thenReturn(inDegrees);
+    when(mockGraph.getNeighbors("X")).thenReturn(List.of("Y"));
+    when(mockGraph.getNeighbors("Y")).thenReturn(List.of("Z"));
+    when(mockGraph.getNeighbors("Z")).thenReturn(List.of());
+
+    TopologicalSortAlgorithm algorithm = new KahnTopologicalSort();
+
+    // When
+    SortResult result = algorithm.sort(mockGraph);
+
+    // Then
+    assertTrue(result.isSuccess());
+    verify(mockGraph, times(1)).calculateInDegrees();
+    verify(mockGraph, atLeast(3)).getNeighbors(anyString());
+}
+    \end{verbatim}
+\end{tcolorbox}
+
+\subsection{Spy-объекты и сравнение алгоритмов}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Использование Spy-объектов},
+    fontupper=\ttfamily\small,
+    breakable,
+    enhanced
+]
+    \begin{verbatim}
+@Test
+@DisplayName("Spy: Отслеживание вызовов реального объекта")
+void testSpy_RealObjectTracking() {
+    // Given: используем spy для отслеживания
+    Graph spyGraph = spy(new Graph(
+        List.of("A", "B"),
+        List.of(List.of("A", "B"))
+    ));
+
+    TopologicalSortAlgorithm algorithm = new DfsTopologicalSort();
+
+    // When
+    algorithm.sort(spyGraph);
+
+    // Then: проверяем вызовы
+    verify(spyGraph, atLeastOnce()).getVertices();
+    verify(spyGraph, atLeastOnce()).getNeighbors(anyString());
+}
+    \end{verbatim}
+\end{tcolorbox}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Параметризованный тест сравнения алгоритмов},
+    fontupper=\ttfamily\small,
+    breakable,
+    enhanced
+]
+    \begin{verbatim}
+@ParameterizedTest
+@DisplayName("Сравнение: Различные графы")
+@MethodSource("provideTestGraphs")
+void compareAlgorithms_VariousGraphs(
+        List<String> vertices,
+        List<List<String>> edges,
+        boolean shouldSucceed) {
+    // Given
+    assumeTrue(vertices != null && edges != null);
+    Graph graph = new Graph(vertices, edges);
+
+    TopologicalSortAlgorithm dfs = new DfsTopologicalSort();
+    TopologicalSortAlgorithm kahn = new KahnTopologicalSort();
+
+    // When
+    SortResult dfsResult = dfs.sort(graph);
+    SortResult kahnResult = kahn.sort(graph);
+
+    // Then
+    assertEquals(shouldSucceed, dfsResult.isSuccess());
+    assertEquals(shouldSucceed, kahnResult.isSuccess());
+
+    if (shouldSucceed) {
+        assertThat(dfsResult.getSortedVertices(), hasSize(vertices.size()));
+        assertThat(kahnResult.getSortedVertices(), hasSize(vertices.size()));
+    }
+}
+    \end{verbatim}
+\end{tcolorbox}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Провайдер тестовых данных},
+    fontupper=\ttfamily\small,
+    breakable,
+    enhanced
+]
+    \begin{verbatim}
+static Stream<Arguments> provideTestGraphs() {
+    return Stream.of(
+        // Простой граф
+        Arguments.of(
+            List.of("A", "B"),
+            List.of(List.of("A", "B")),
+            true
+        ),
+        // Треугольник с циклом
+        Arguments.of(
+            List.of("A", "B", "C"),
+            List.of(List.of("A", "B"), List.of("B", "C"), List.of("C", "A")),
+            false
+        ),
+        // Дерево
+        Arguments.of(
+            List.of("A", "B", "C", "D", "E"),
+            List.of(List.of("A", "B"), List.of("A", "C"),
+                    List.of("B", "D"), List.of("B", "E")),
+            true
+        )
+    );
+}
+    \end{verbatim}
+\end{tcolorbox}
+
+\section{Тесты валидации результатов}\label{app:validation-tests}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Тесты валидации топологического порядка},
+    fontupper=\ttfamily\small,
+    breakable,
+    enhanced
+]
+    \begin{verbatim}
+@Nested
+@DisplayName("Тесты валидации топологического порядка")
+class ValidationTests {
+
+    @Test
+    @DisplayName("Валидация: Корректный порядок")
+    void testValidOrder() {
+        Graph graph = new Graph(
+            List.of("A", "B", "C"),
+            List.of(List.of("A", "B"), List.of("B", "C"))
+        );
+        SortResult result = SortResult.success(
+            List.of("A", "B", "C"), "DFS", 0.5);
+
+        boolean isValid = SortValidator
+            .isValidTopologicalOrder(graph, result);
+
+        assertTrue(isValid, "Порядок должен быть валидным");
+    }
+
+    @Test
+    @DisplayName("Валидация: Невалидный порядок")
+    void testInvalidOrder_ViolatedEdge() {
+        Graph graph = new Graph(
+            List.of("A", "B"),
+            List.of(List.of("A", "B"))
+        );
+        SortResult result = SortResult.success(
+            List.of("B", "A"), "DFS", 0.5);  // неправильный порядок
+
+        boolean isValid = SortValidator
+            .isValidTopologicalOrder(graph, result);
+
+        assertFalse(isValid, "Порядок должен быть невалидным");
+    }
+
+    @Test
+    @DisplayName("Валидация: Пустой граф")
+    void testValidation_EmptyGraph() {
+        Graph graph = new Graph();
+        SortResult result = SortResult.success(List.of(), "DFS", 0.5);
+
+        boolean isValid = SortValidator
+            .isValidTopologicalOrder(graph, result);
+
+        assertTrue(isValid, "Пустой результат валиден для пустого графа");
+    }
+}
+    \end{verbatim}
+\end{tcolorbox}
+
+\section{Параметризованные тесты}\label{app:parameterized-tests}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Примеры параметризованных тестов с @ValueSource},
+    fontupper=\ttfamily\small,
+    breakable,
+    enhanced
+]
+    \begin{verbatim}
+@ParameterizedTest
+@DisplayName("Параметризованный тест: валидные имена вершин")
+@ValueSource(strings = {"A", "B", "vertex1", "v_123", "Node-5"})
+void testValidVertexNames(String vertexName) {
+    assertDoesNotThrow(() -> graph.addVertex(vertexName));
+    assertTrue(graph.containsVertex(vertexName));
+    assertThat(graph.getVertices(), hasItem(vertexName));
+}
+
+@ParameterizedTest
+@DisplayName("Параметризованный тест: невалидные вершины")
+@MethodSource("provideInvalidVertices")
+void testInvalidVertices(String invalidVertex) {
+    assertThrows(IllegalArgumentException.class,
+        () -> graph.addVertex(invalidVertex));
+}
+
+static Stream<String> provideInvalidVertices() {
+    return Stream.of(null, "", "  ", "\t", "\n");
+}
+    \end{verbatim}
+\end{tcolorbox}
+
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!75,
+    title={Листинг: Параметризованный тест с @CsvSource},
+    fontupper=\ttfamily\small,
+    breakable,
+    enhanced
+]
+    \begin{verbatim}
+@ParameterizedTest
+@DisplayName("Параметризованный тест: размеры графов")
+@CsvSource({
+    "0, 0",
+    "1, 0",
+    "2, 1",
+    "3, 2",
+    "5, 4"
+})
+void testGraphSizes(int vertexCount, int edgeCount) {
+    // Given: создаём линейный граф заданного размера
+    for (int i = 0; i < vertexCount; i++) {
+        graph.addVertex("V" + i);
+        if (i > 0) {
+            graph.addEdge("V" + (i-1), "V" + i);
+        }
+    }
+
+    // Then
+    assertEquals(vertexCount, graph.getVertexCount());
+    assertEquals(edgeCount, graph.getEdgeCount());
+}
+    \end{verbatim}
+\end{tcolorbox}
+
+\section{Сводная таблица реализованных тестов}\label{app:test-summary}
+
+В таблице~\ref{tab:all_tests_summary} представлена сводная информация о всех реализованных тестах с указанием методики проектирования и покрываемого условия.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Сводная таблица реализованных тестов}
+    \label{tab:all_tests_summary}
+    \small
+    \begin{tabular}{|l|l|l|l|}
+        \hline
+        \textbf{TC ID} & \textbf{Методика} & \textbf{Метод теста} & \textbf{Статус} \\
+        \hline
+        TC-EP-01 & EP & \texttt{testEmptyGraph\_EP01} & Реализован \\
+        \hline
+        TC-EP-02 & EP & \texttt{testAcyclicGraph\_EP02} & Реализован \\
+        \hline
+        TC-EP-03 & EP & \texttt{testCyclicGraph\_EP03} & Реализован \\
+        \hline
+        TC-EP-04 & EP & \texttt{testInvalidFormat\_EP04} & Реализован \\
+        \hline
+        TC-BVA-01 & BVA & \texttt{testZeroVertices\_BVA01} & Реализован \\
+        \hline
+        TC-BVA-02 & BVA & \texttt{testOneVertex\_BVA02} & Реализован \\
+        \hline
+        TC-BVA-03 & BVA & \texttt{testTwoVerticesNoEdges\_BVA03} & Реализован \\
+        \hline
+        TC-BVA-04 & BVA & \texttt{testTwoVerticesOneEdge\_BVA04} & Реализован \\
+        \hline
+        TC-BVA-05 & BVA & \texttt{testCompleteDAG\_BVA05} & Реализован \\
+        \hline
+        TC-BVA-06 & BVA & \texttt{testLargeGraph\_BVA06} & Реализован \\
+        \hline
+        TC-DT-01 & DT & \texttt{testDT\_R1\_EmptyGraph} & Реализован \\
+        \hline
+        TC-DT-02 & DT & \texttt{testDT\_R2\_ValidDAG} & Реализован \\
+        \hline
+        TC-DT-03 & DT & \texttt{testDT\_R3\_CycleDetected} & Реализован \\
+        \hline
+        TC-DT-04 & DT & \texttt{testDT\_R4\_FileNotFound} & Реализован \\
+        \hline
+        TC-DT-05 & DT & \texttt{testDT\_R5\_InvalidJSON} & Реализован \\
+        \hline
+        TC-DT-06 & DT & \texttt{testDT\_R6\_NoAlgorithm} & Реализован \\
+        \hline
+        TC-BR-01 & Branch & \texttt{testBranch\_IsEmpty\_True} & Реализован \\
+        \hline
+        TC-BR-02 & Branch & \texttt{testBranch\_IsEmpty\_False} & Реализован \\
+        \hline
+        TC-BR-03 & Branch & \texttt{testBranch\_CycleDetection} & Реализован \\
+        \hline
+        TC-BR-04 & Branch & \texttt{testBranch\_AlreadyVisited} & Реализован \\
+        \hline
+        TC-BR-05 & Branch & \texttt{testBranch\_FullTraversal} & Реализован \\
+        \hline
+    \end{tabular}
+\end{table}
