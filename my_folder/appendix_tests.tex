@@ -35,7 +35,8 @@ void testEmptyGraph_EP01() {
     \end{verbatim}
 \end{tcolorbox}
 
-\subsection{TC-EP-02: Ациклический граф (DAG)}
+\subsection{TC-EP-02: Ациклический граф (DAG)}\label{lst:ep02}
+
 
 \begin{tcolorbox}[
     colback=gray!5,
@@ -79,7 +80,7 @@ void testAcyclicGraph_EP02() {
     \end{verbatim}
 \end{tcolorbox}
 
-\subsection{TC-EP-03: Граф с циклом}
+\subsection{TC-EP-03: Граф с циклом}\label{lst:ep03}
 
 \begin{tcolorbox}[
     colback=gray!5,
@@ -110,7 +111,7 @@ void testCyclicGraph_EP03() {
     \end{verbatim}
 \end{tcolorbox}
 
-\subsection{TC-EP-04: Некорректный формат}
+\subsection{TC-EP-04: Некорректный формат}\label{lst:ep04}
 
 \begin{tcolorbox}[
     colback=gray!5,
@@ -139,7 +140,8 @@ void testInvalidFormat_EP04() {
 
 \section{Тесты Boundary Value Analysis}\label{app:bva-tests}
 
-\subsection{TC-BVA-01 и TC-BVA-02: Минимальные размеры}
+\subsection{TC-BVA-01 и TC-BVA-02: Минимальные размеры}\label{lst:bva01}
+
 
 \begin{tcolorbox}[
     colback=gray!5,
@@ -176,7 +178,7 @@ void testOneVertex_BVA02() {
     \end{verbatim}
 \end{tcolorbox}
 
-\subsection{TC-BVA-03 и TC-BVA-04: Граница связности}
+\subsection{TC-BVA-03 и TC-BVA-04: Граница связности}\label{lst:bva03}
 
 \begin{tcolorbox}[
     colback=gray!5,
@@ -219,7 +221,7 @@ void testTwoVerticesOneEdge_BVA04() {
     \end{verbatim}
 \end{tcolorbox}
 
-\subsection{TC-BVA-05: Параметризованный тест полного DAG}
+\subsection{TC-BVA-05: Параметризованный тест полного DAG}\label{lst:bva05}
 
 \begin{tcolorbox}[
     colback=gray!5,
@@ -260,7 +262,7 @@ void testCompleteDAG_BVA05(int vertexCount, int expectedEdges) {
     \end{verbatim}
 \end{tcolorbox}
 
-\subsection{TC-BVA-06: Большой граф}
+\subsection{TC-BVA-06: Большой граф}\label{lst:bva06}
 
 \begin{tcolorbox}[
     colback=gray!5,
@@ -301,7 +303,8 @@ void testLargeGraph_BVA06() {
 
 \section{Тесты Decision Table}\label{app:dt-tests}
 
-\subsection{Вложенный класс тестов Decision Table}
+\subsection{Вложенный класс тестов Decision Table}\label{lst:dt01}
+
 
 \begin{tcolorbox}[
     colback=gray!5,
@@ -375,7 +378,8 @@ class DecisionTableTests {
     \end{verbatim}
 \end{tcolorbox}
 
-\subsection{Тесты обработки ошибок ввода-вывода}
+\subsection{Тесты обработки ошибок ввода-вывода}\label{lst:dt04}
+
 
 \begin{tcolorbox}[
     colback=gray!5,
@@ -415,7 +419,8 @@ void testDT_R5_InvalidJSON() throws IOException {
 
 \section{Тесты Branch Testing}\label{app:branch-tests}
 
-\subsection{Тесты покрытия ветвей алгоритма DFS}
+\subsection{Тесты покрытия ветвей алгоритма DFS}\label{lst:br01}
+
 
 \begin{tcolorbox}[
     colback=gray!5,
@@ -520,7 +525,8 @@ class BranchTests {
 
 \section{Тесты с использованием Mockito}\label{app:mockito-tests}
 
-\subsection{Mock-объекты и верификация вызовов}
+\subsection{Mock-объекты и верификация вызовов}\label{lst:mockito}
+
 
 \begin{tcolorbox}[
     colback=gray!5,
@@ -595,7 +601,8 @@ void testMock_CustomVertices() {
     \end{verbatim}
 \end{tcolorbox}
 
-\subsection{Spy-объекты и сравнение алгоритмов}
+\subsection{Spy-объекты и сравнение алгоритмов}\label{lst:spy}
+
 
 \begin{tcolorbox}[
     colback=gray!5,
