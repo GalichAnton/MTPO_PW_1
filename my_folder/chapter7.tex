@@ -5,7 +5,9 @@
 
 \section{Мутационные операторы} \label{ch7:operators}
 
-При проведении мутационного тестирования использовалась конфигурация \texttt{DEFAULTS} инструмента Pitest, которая включает набор стандартных мутационных операторов. В таблице~\ref{tab:mutation_operators} представлен полный перечень задействованных операторов.
+При проведении мутационного тестирования использовалась конфигурация \texttt{DEFAULTS} инструмента Pitest,
+которая включает набор стандартных мутационных операторов.
+В таблице~\ref{tab:mutation_operators} представлен полный перечень задействованных операторов.
 
 \begin{table}[htbp]
     \centering
@@ -40,7 +42,7 @@
     \end{tabular}
 \end{table}
 
-\subsection{Применение операторов к исходному коду}
+\subsection*{Применение операторов к исходному коду}
 
 В таблице~\ref{tab:operator_examples} приведены примеры применения мутационных операторов к коду проекта топологической сортировки.
 
@@ -68,18 +70,19 @@
 
 \section{Эквивалентные мутации} \label{ch7:equivalent}
 
-\subsection{Определение эквивалентных мутаций}
+\subsection*{Определение эквивалентных мутаций}
 
-\textbf{Эквивалентная мутация} --- это мутация исходного кода, которая не изменяет наблюдаемое поведение программы ни при каких входных данных. Такая мутация семантически эквивалентна исходному коду и принципиально не может быть обнаружена (``убита'') никаким тестом.
+\textbf{Эквивалентная мутация} --- это мутация исходного кода, которая не изменяет наблюдаемое поведение программы ни при каких входных данных.
+Такая мутация семантически эквивалентна исходному коду и принципиально не может быть обнаружена (``убита'') никаким тестом.
 
 Эквивалентные мутации представляют фундаментальную проблему мутационного тестирования, так как:
 \begin{itemize}
-    \item невозможно автоматически определить, является ли мутация эквивалентной (неразрешимая задача);
+    \item невозможно автоматически определить, является ли мутация эквивалентной;
     \item выжившие эквивалентные мутации искусственно занижают показатель mutation score;
     \item требуется ручной анализ для классификации выживших мутаций.
 \end{itemize}
 
-\subsection{Типичные случаи эквивалентных мутаций}
+\subsection*{Типичные случаи эквивалентных мутаций}
 
 В таблице~\ref{tab:equivalent_examples} представлены типичные паттерны эквивалентных мутаций.
 
@@ -102,10 +105,6 @@
     \end{tabular}
 \end{table}
 
-\subsection{Анализ эквивалентных мутаций в проекте}
-
-При анализе результатов мутационного тестирования проекта было выявлено несколько потенциально эквивалентных мутаций. Рассмотрим конкретный пример из класса \texttt{Graph}.
-
 \textbf{Пример эквивалентной мутации:}
 
 \begin{verbatim}
@@ -122,28 +121,36 @@ if (neighbors.isEmpty()) {  // инвертировано условие
 }
 \end{verbatim}
 
-Данная мутация в методе \texttt{toString()} класса \texttt{Graph} может быть классифицирована как \textbf{частично эквивалентная} по следующим причинам:
+Данная мутация в методе \texttt{toString()} класса \texttt{Graph} может быть классифицирована как \textbf{эквивалентная} по следующим причинам:
 \begin{enumerate}
     \item Метод \texttt{toString()} используется преимущественно для отладки и логирования;
     \item Существующие тесты не проверяют строковое представление графов с пустыми списками соседей;
     \item Изменение формата вывода не влияет на функциональную корректность алгоритмов сортировки.
 \end{enumerate}
 
-Однако данная мутация не является полностью эквивалентной, так как изменяет результат метода \texttt{toString()} для определённых входных данных. Она относится к категории \textbf{выживших мутаций}, которые могут быть убиты дополнительными тестами.
+Однако данная мутация не является полностью эквивалентной, так как изменяет результат метода \texttt{toString()} для определённых входных данных.
+Она относится к категории \textbf{выживших мутаций}, которые могут быть убиты дополнительными тестами.
 
 \section{Метрики качества тестов} \label{ch7:metrics}
 
-\subsection{Результаты мутационного тестирования}
+\subsection*{Результаты мутационного тестирования}
 
-По результатам запуска Pitest получены следующие показатели:
+По результатам запуска Pitest (рисунок~\ref{fig:pit_before}) получены следующие показатели:
 \begin{itemize}
     \item Количество тестируемых классов: 3 (пакет \texttt{model})
-    \item Всего сгенерировано мутаций: 91
-    \item Убито мутаций: 75
+    \item Всего сгенерировано мутаций: 88
+    \item Убито мутаций: 72
     \item Выжило мутаций: 16
 \end{itemize}
 
-\subsection{Определение метрик}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{../my_folder/images/from.png}
+    \caption{Отчёт Pitest}
+    \label{fig:pit_before}
+\end{figure}
+
+\subsection*{Определение метрик}
 
 В таблице~\ref{tab:metrics_definition} представлены основные метрики мутационного тестирования и их определения.
 
@@ -166,9 +173,7 @@ if (neighbors.isEmpty()) {  // инвертировано условие
     \end{tabular}
 \end{table}
 
-\subsection{Значения метрик для проекта}
-
-В таблице~\ref{tab:metrics_values} представлены рассчитанные значения метрик для разработанных модульных тестов.
+В таблице~\ref{tab:metrics_values} представлены значения метрик для разработанных модульных тестов.
 
 \begin{table}[htbp]
     \centering
@@ -178,151 +183,205 @@ if (neighbors.isEmpty()) {  // инвертировано условие
         \hline
         \textbf{Метрика} & \textbf{Значение} & \textbf{Расчёт} \\
         \hline
-        LCC (Line Coverage) & 99\% & 168 / 169 строк \\
+        LCC (Line Coverage) & 99\% & 163 / 164 строк \\
         \hline
-        MSI (Mutation Score) & 82\% & 75 / 91 мутаций \\
+        MSI (Mutation Score) & 82\% & 72 / 88 мутаций \\
         \hline
         MCC (Mutation Coverage) & 100\% & Все мутации покрыты тестами \\
         \hline
-        CoveredCodeMSI (Test Strength) & 82\% & 75 / 91 (совпадает с MSI) \\
+        CoveredCodeMSI (Test Strength) & 82\% & 72 / 88 (совпадает с MSI) \\
         \hline
     \end{tabular}
 \end{table}
 
-\textbf{Интерпретация результатов:}
-\begin{itemize}
-    \item \textbf{LCC = 99\%} --- практически полное покрытие кода тестами. Единственная непокрытая строка, вероятно, относится к обработке исключительных ситуаций или отладочному коду.
-    \item \textbf{MSI = 82\%} --- 82\% мутаций успешно обнаружены тестами. Это хороший показатель, превышающий типичный порог в 80\%.
-    \item \textbf{MCC = 100\%} --- все сгенерированные мутации находятся в коде, покрытом тестами. Совпадение MSI и Test Strength подтверждает это.
-    \item \textbf{CoveredCodeMSI = 82\%} --- эффективность тестов в обнаружении мутаций в покрытом коде.
-\end{itemize}
-
 \section{Анализ mutation-adequacy} \label{ch7:adequacy}
 
-\subsection{Критерий mutation-adequate}
+\subsection*{Критерий mutation-adequate}
 
 Набор тестов считается \textbf{mutation-adequate}, если он убивает все неэквивалентные мутации, то есть достигает 100\% mutation score (исключая эквивалентные мутации).
 
-\subsection{Оценка разработанных тестов}
+\subsection*{Оценка разработанных тестов}
 
 Анализ результатов позволяет сделать следующие выводы:
 
 \begin{enumerate}
     \item \textbf{Формально тесты не являются mutation-adequate}, так как MSI составляет 82\%, а не 100\%.
 
-    \item \textbf{Количество выживших мутаций}: 16 мутаций из 91 не были обнаружены тестами.
+    \item \textbf{Количество выживших мутаций}: 16 мутаций из 88 не были обнаружены тестами.
 
-    \item \textbf{Причины выживания мутаций} (по результатам анализа):
+    \item \textbf{Причины выживания мутаций} (по результатам детального анализа):
     \begin{itemize}
-        \item Мутации в методах \texttt{toString()} --- 5-7 мутаций (косметический вывод);
-        \item Мутации в методах \texttt{equals()} и \texttt{hashCode()} --- 3-4 мутации;
-        \item Мутации граничных условий в редко используемых ветвях --- 4-5 мутаций;
-        \item Потенциально эквивалентные мутации --- 1-2 мутации.
+        \item Мутации в методе \texttt{toString()} класса \texttt{ComparisonResult} --- 7 мутаций (замена условий в тернарных операторах и ветвлениях);
+        \item Мутации \texttt{TRUE\_RETURNS} в boolean-геттерах класса \texttt{ComparisonResult} --- 3 мутации;
+        \item Мутации в методе \texttt{addEdge()} класса \texttt{Graph} --- 3 мутации (удаление валидации и условий);
+        \item Мутации в методах \texttt{containsVertex()} и \texttt{toString()} класса \texttt{Graph} --- 2 мутации;
+        \item Мутация \texttt{hashCode()} класса \texttt{SortResult} --- 1 мутация.
     \end{itemize}
-
-    \item \textbf{Пороговые значения}: MSI = 82\% превышает типичные промышленные пороги (60-80\%), что свидетельствует о хорошем качестве тестового набора.
 \end{enumerate}
-
-\subsection{Выводы по adequacy}
 
 Хотя разработанные тесты формально не достигают критерия mutation-adequate, они демонстрируют высокое качество по следующим причинам:
 \begin{itemize}
-    \item MSI значительно превышает минимально допустимый порог;
-    \item Большинство выживших мутаций относится к вспомогательным методам (\texttt{toString}, \texttt{equals}), а не к основной бизнес-логике;
+    \item MSI превышает минимально допустимый порог (80\%);
+    \item Большинство выживших мутаций относится к вспомогательным методам (\texttt{toString}, boolean-геттеры), а не к основной бизнес-логике;
     \item Критически важные алгоритмы топологической сортировки (DFS и Kahn) имеют более высокий локальный mutation score.
 \end{itemize}
 
 \section{Улучшение качества тестов} \label{ch7:improvement}
 
-\subsection{Анализ выживших мутаций}
+\subsection*{Анализ выживших мутаций}
 
-Для улучшения качества тестов был проведён детальный анализ выживших мутаций. В таблице~\ref{tab:survived_mutations} представлены категории выживших мутаций и рекомендации по их устранению.
+Для улучшения качества тестов был проведён анализ выживших мутаций на основе отчётов PIT и разработаны дополнительные тесты.
 
-\begin{table}[htbp]
-    \centering
-    \caption{Анализ выживших мутаций}
-    \label{tab:survived_mutations}
-    \small
-    \begin{tabular}{|p{3cm}|c|p{5cm}|c|}
-        \hline
-        \textbf{Категория} & \textbf{Кол-во} & \textbf{Пример} & \textbf{Приоритет} \\
-        \hline
-        Методы toString() & 5 & Изменение формата вывода & Низкий \\
-        \hline
-        equals/hashCode & 4 & Некорректное сравнение полей & Средний \\
-        \hline
-        Граничные условия & 5 & Замена \texttt{<} на \texttt{<=} & Высокий \\
-        \hline
-    \end{tabular}
-\end{table}
+Ниже приведены примеры тестов.
 
-\subsection{Добавленные тесты}
+\textbf{Тест 1: Проверка boolean-геттеров с false-значениями}
 
-По результатам мутационного тестирования были разработаны дополнительные тесты для повышения mutation score.
-
-\textbf{Пример 1: Тест для проверки граничного условия}
+Файл: \texttt{ResultsTest.java}, класс \texttt{ComparisonResultTests}.
 
 \begin{verbatim}
 @Test
-@DisplayName("Проверка границы размера ребра")
-void testEdgeSizeBoundary() {
-    // Тест убивает мутацию CONDITIONALS_BOUNDARY
-    // в проверке edge.size() != 2
+@DisplayName("Boolean-геттеры возвращают false")
+void testBooleanGetters_ReturnFalse() {
+    ComparisonResult comparison = ComparisonResult.builder()
+            .dfsResult(SortResult.success(
+                List.of("A"), "DFS", 1.0))
+            .kahnResult(SortResult.success(
+                List.of("A"), "Kahn", 1.0))
+            .vertexCount(1).edgeCount(0)
+            .dfsValid(false)
+            .kahnValid(false)
+            .identicalOrder(false)
+            .recommendation("").build();
 
-    // Given: ребро с одним элементом
-    List<String> vertices = List.of("A", "B");
-    List<List<String>> edges = List.of(List.of("A")); // размер 1
-
-    // When/Then
-    assertThrows(IllegalArgumentException.class,
-        () -> new Graph(vertices, edges));
+    assertFalse(comparison.isDfsValid());
+    assertFalse(comparison.isKahnValid());
+    assertFalse(comparison.isIdenticalOrder());
 }
 \end{verbatim}
 
-\textbf{Пример 2: Тест для метода toString()}
+\textbf{Тест 2: Валидация вершин в addEdge()}
+
+Файл: \texttt{GraphTest.java}.
 
 \begin{verbatim}
 @Test
-@DisplayName("toString содержит информацию о рёбрах")
-void testToStringWithEdges() {
-    // Тест убивает мутацию NEGATE_CONDITIONALS
-    // в условии !neighbors.isEmpty()
+@DisplayName("addEdge выбрасывает исключение для null/пустых вершин")
+void testAddEdge_InvalidVertexValidation() {
+    graph.addVertex("A");
+    graph.addVertex("B");
 
-    // Given
-    Graph graph = new Graph();
+    assertThrows(IllegalArgumentException.class,
+            () -> graph.addEdge(null, "B"));
+    assertThrows(IllegalArgumentException.class,
+            () -> graph.addEdge("A", null));
+    assertThrows(IllegalArgumentException.class,
+            () -> graph.addEdge("", "B"));
+    assertThrows(IllegalArgumentException.class,
+            () -> graph.addEdge("A", "  "));
+}
+\end{verbatim}
+
+\textbf{Тест 3: toString() с точной проверкой условных ветвей}
+
+Файл: \texttt{ResultsTest.java}, класс \texttt{ComparisonResultTests}.
+
+\begin{verbatim}
+@Test
+@DisplayName("toString корректно отражает все условные ветви")
+void testToString_ConditionalBranches() {
+    // Случай 1: успех + валидный + идентичный порядок
+    ComparisonResult success = ComparisonResult.builder()
+            .dfsResult(SortResult.success(
+                List.of("A"), "DFS", 1.0))
+            .kahnResult(SortResult.success(
+                List.of("A"), "Kahn", 1.0))
+            .vertexCount(1).edgeCount(0)
+            .dfsValid(true).kahnValid(true)
+            .identicalOrder(true)
+            .recommendation("").build();
+    String sStr = success.toString();
+    assertThat(sStr, allOf(
+        containsString("\u2713 Успех"),
+        containsString("\u2713 Валидный порядок"),
+        containsString("Да")
+    ));
+
+    // Случай 2: ошибка + невалидный + разный порядок
+    ComparisonResult failure = ComparisonResult.builder()
+            .dfsResult(SortResult.failure("Err", "DFS", 1.0))
+            .kahnResult(SortResult.failure("Err", "Kahn", 1.0))
+            .vertexCount(1).edgeCount(0)
+            .dfsValid(false).kahnValid(false)
+            .identicalOrder(false)
+            .recommendation("").build();
+    String fStr = failure.toString();
+    assertThat(fStr, allOf(
+        containsString("\u2717 Ошибка"),
+        containsString("\u2717 Невалидный"),
+        containsString("Нет")
+    ));
+}
+\end{verbatim}
+
+\textbf{Тест 4: containsVertex() для несуществующей вершины}
+
+Файл: \texttt{GraphTest.java}.
+
+\begin{verbatim}
+@Test
+@DisplayName("containsVertex возвращает false для отсутствующей вершины")
+void testContainsVertex_NotExists() {
+    graph.addVertex("A");
+
+    assertFalse(graph.containsVertex("Z"));
+    assertFalse(graph.containsVertex("nonexistent"));
+}
+\end{verbatim}
+
+\textbf{Тест 5: hashCode() чувствительность к данным}
+
+Файл: \texttt{ResultsTest.java}, класс \texttt{SortResultTests}.
+
+\begin{verbatim}
+@Test
+@DisplayName("hashCode различен для разных результатов")
+void testHashCode_Different() {
+    SortResult r1 = SortResult.success(
+            List.of("A", "B"), "DFS", 1.0);
+    SortResult r2 = SortResult.success(
+            List.of("B", "A"), "DFS", 1.0);
+
+    assertNotEquals(r1.hashCode(), r2.hashCode());
+}
+\end{verbatim}
+
+\textbf{Тест 6: toString() Graph с рёбрами}
+
+Файл: \texttt{GraphTest.java}.
+
+\begin{verbatim}
+@Test
+@DisplayName("toString содержит информацию о рёбрах графа")
+void testToString_ContainsEdgeInfo() {
     graph.addVertex("A");
     graph.addVertex("B");
     graph.addEdge("A", "B");
 
-    // When
     String result = graph.toString();
-
-    // Then
     assertThat(result, containsString("A -> [B]"));
 }
 \end{verbatim}
 
-\textbf{Пример 3: Тест для equals()}
+\subsection*{Результаты улучшения}
 
-\begin{verbatim}
-@Test
-@DisplayName("equals возвращает false для разных графов")
-void testEquals_DifferentGraphs() {
-    // Тест убивает мутацию TRUE_RETURNS
-    // в методе equals
+После добавления тестов был выполнен повторный запуск PIT (рисунок~\ref{fig:pit_after}).
 
-    // Given
-    SortResult result1 = SortResult.success(
-        List.of("A", "B"), "DFS", 1.0);
-    SortResult result2 = SortResult.success(
-        List.of("B", "A"), "DFS", 1.0);
-
-    // Then
-    assertNotEquals(result1, result2);
-}
-\end{verbatim}
-
-\subsection{Результаты улучшения}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{../my_folder/images/to.png}
+    \caption{Отчёт Pitest после улучшения тестов}
+    \label{fig:pit_after}
+\end{figure}
 
 В таблице~\ref{tab:improvement_results} представлено сравнение метрик до и после добавления тестов.
 
@@ -334,27 +393,29 @@ void testEquals_DifferentGraphs() {
         \hline
         \textbf{Метрика} & \textbf{До} & \textbf{После} & \textbf{Изменение} \\
         \hline
-        Line Coverage & 99\% & 99\% & -- \\
+        Line Coverage & 99\% (163/164) & 99\% (163/164) & -- \\
         \hline
-        Mutation Score & 82\% & 89\%* & +7\% \\
+        Mutation Score & 82\% (72/88) & 90\% (79/88) & +8\% \\
         \hline
-        Убито мутаций & 75 & 81* & +6 \\
+        Убито мутаций & 72 & 79 & +7 \\
         \hline
-        Выжило мутаций & 16 & 10* & -6 \\
+        Выжило мутаций & 16 & 9 & $-7$ \\
         \hline
     \end{tabular}
-
-    \small{* Прогнозируемые значения после добавления рекомендованных тестов}
 \end{table}
 
-\subsection{Выводы}
+Добавленные тесты убили 7 из 16 выживших мутаций
 
-Мутационное тестирование с использованием Pitest позволило:
+\subsection*{Выводы}
+
+Мутационное тестирование с помощью Pitest позволило:
 \begin{enumerate}
-    \item Выявить слабые места в тестовом покрытии, не обнаруживаемые традиционными метриками;
-    \item Определить приоритеты для доработки тестов на основе категорий выживших мутаций;
-    \item Улучшить качество тестового набора путём добавления целевых тестов;
-    \item Достичь mutation score выше порогового значения 80\%.
+    \item Найти слабые места в тестах, которые не видны по обычным метрикам --- при покрытии строк 99\% mutation score был 82\%;
+    \item Понять, какие тесты нужно добавить в первую очередь: проверки boolean-геттеров с значением \texttt{false}, тест \texttt{containsVertex()} для несуществующей вершины, проверка \texttt{hashCode()};
+    \item Поднять mutation score с 82\% до 90\% за счёт 6 дополнительных тестов, которые убили 7 мутаций;
+    \item Убедиться, что оставшиеся 9 выживших мутаций находятся в методах форматирования вывода (\texttt{toString}) и дублирующей валидации (\texttt{addEdge}), и не влияют на работу основных алгоритмов сортировки.
 \end{enumerate}
 
-Процесс мутационного тестирования подтвердил эффективность разработанных модульных тестов и предоставил чёткие рекомендации для дальнейшего улучшения качества тестирования.
+Итоговый MSI = 90\% превышает типичные промышленные пороги (60--80\%), что говорит о хорошем качестве написанных тестов.
+Мутационное тестирование показало, что покрытие строк кода и mutation score --- это разные вещи, и высокий процент покрытия ещё не означает, что тесты действительно хорошо проверяют код.
+Анализ выживших мутаций помог точечно улучшить тестовый набор.
